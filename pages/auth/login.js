@@ -10,6 +10,7 @@ export default function Login() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,21 +23,47 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
     // Validasi sederhana
     if (!loginData.username || !loginData.password) {
       setError('Username dan password harus diisi');
+      setLoading(false);
       return;
     }
     
-    // Simulasi proses login
-    // Di aplikasi sebenarnya, ini akan mengirim request ke API
     try {
-      // Untuk demo, kita akan redirect ke dashboard admin
-      // Di aplikasi sebenarnya, ini akan tergantung pada role pengguna
-      router.push('/admin/dashboard');
+      // Kirim request ke API login
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Simpan token di localStorage
+        localStorage.setItem('token', data.token);
+        
+        // Redirect berdasarkan role pengguna
+        if (data.user.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (data.user.role === 'guru') {
+          router.push('/guru/dashboard');
+        } else {
+          router.push('/');
+        }
+      } else {
+        setError(data.message || 'Login gagal. Silakan coba lagi.');
+      }
     } catch (err) {
-      setError('Login gagal. Silakan coba lagi.');
+      setError('Terjadi kesalahan koneksi. Silakan coba lagi.');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,6 +101,7 @@ export default function Login() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Masukkan username"
+                required
               />
             </div>
             
@@ -89,14 +117,16 @@ export default function Login() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Masukkan password"
+                required
               />
             </div>
             
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
+              disabled={loading}
+              className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Masuk
+              {loading ? 'Memproses...' : 'Masuk'}
             </button>
           </form>
           

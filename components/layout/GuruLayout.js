@@ -2,13 +2,38 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
 export default function GuruLayout({ title, children }) {
   const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Periksa apakah pengguna sudah login dan memiliki role yang sesuai
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+
+    // Decode token untuk mendapatkan informasi pengguna
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.role !== 'guru') {
+        router.push('/auth/login');
+        return;
+      }
+      setUser(payload);
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      router.push('/auth/login');
+    }
+  }, [router]);
 
   const handleLogout = () => {
-    // Hapus token dari localStorage atau cookies
-    // Di sini kita hanya redirect ke halaman login
+    // Hapus token dari localStorage
+    localStorage.removeItem('token');
+    // Redirect ke halaman login
     router.push('/auth/login');
   };
 
@@ -16,6 +41,17 @@ export default function GuruLayout({ title, children }) {
   const isActive = (path) => {
     return router.pathname === path;
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Memeriksa autentikasi...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -30,7 +66,7 @@ export default function GuruLayout({ title, children }) {
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
           <div className="flex items-center space-x-4">
-            <span className="text-gray-700">Guru</span>
+            <span className="text-gray-700">{user.nama || 'Guru'}</span>
             <button
               onClick={handleLogout}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
