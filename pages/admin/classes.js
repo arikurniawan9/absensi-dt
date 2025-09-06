@@ -21,6 +21,8 @@ export default function ClassManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [searchTimeout, setSearchTimeout] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState(null);
 
   // Fungsi untuk mengambil daftar kelas
   const fetchClasses = async () => {
@@ -144,6 +146,112 @@ export default function ClassManagement() {
     setSearchTimeout(newTimeout);
   };
 
+  // Fungsi untuk menghandle import file
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Reset hasil import sebelumnya
+    setImportResult(null);
+    
+    // Validasi ekstensi file
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      alert('File harus berupa Excel (.xlsx atau .xls)');
+      return;
+    }
+    
+    setImportLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/classes/import', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setImportResult(data);
+        // Refresh daftar kelas
+        fetchClasses();
+        alert('Import berhasil');
+      } else {
+        alert(data.message || 'Gagal mengimport data');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan koneksi');
+      console.error(err);
+    } finally {
+      setImportLoading(false);
+      // Reset input file
+      e.target.value = '';
+    }
+  };
+
+  // Fungsi untuk menghandle export
+  const handleExport = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/classes/export', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        // Buat blob dari response
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `data-kelas-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Gagal mengekspor data');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan koneksi');
+      console.error(err);
+    }
+  };
+
+  // Fungsi untuk mendownload template
+  const downloadTemplate = async () => {
+    try {
+      const response = await fetch('/api/admin/classes/template');
+      
+      if (response.ok) {
+        // Buat blob dari response
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'template-import-kelas.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Gagal mendownload template');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan koneksi');
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchClasses();
   }, [filters]);
@@ -196,12 +304,36 @@ export default function ClassManagement() {
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-medium text-gray-900">Daftar Kelas</h3>
-          <button
-            onClick={handleAddClass}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
-          >
-            Tambah Kelas
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={downloadTemplate}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300"
+            >
+              Download Template
+            </button>
+            <label className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300 cursor-pointer">
+              {importLoading ? 'Mengimport...' : 'Import Excel'}
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleImport}
+                className="hidden"
+                disabled={importLoading}
+              />
+            </label>
+            <button
+              onClick={handleExport}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300"
+            >
+              Export Excel
+            </button>
+            <button
+              onClick={handleAddClass}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
+            >
+              Tambah Kelas
+            </button>
+          </div>
         </div>
         
         <div className="p-6">
@@ -219,6 +351,29 @@ export default function ClassManagement() {
               className="form-input w-full md:w-1/3"
             />
           </div>
+          
+          {/* Hasil Import */}
+          {importResult && (
+            <div className={`mb-6 p-4 rounded-md ${importResult.results.failed > 0 ? 'bg-red-100 border border-red-400' : 'bg-green-100 border border-green-400'}`}>
+              <h4 className="font-medium text-gray-900 mb-2">Hasil Import</h4>
+              <p className="text-sm">
+                Berhasil: {importResult.results.success}, Gagal: {importResult.results.failed}
+              </p>
+              {importResult.results.errors.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-medium">Error:</p>
+                  <ul className="list-disc list-inside text-sm">
+                    {importResult.results.errors.slice(0, 5).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                    {importResult.results.errors.length > 5 && (
+                      <li>... dan {importResult.results.errors.length - 5} error lainnya</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Tabel Kelas */}
           {loading ? (
