@@ -18,7 +18,7 @@ export default function AdminSidebar() {
       <div className="p-6">
         <nav className="space-y-2">
           <Link 
-            href="/admin/dashboard" 
+            href="/admin/dashboard"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/dashboard') 
                 ? 'text-white bg-blue-600' 
@@ -28,7 +28,7 @@ export default function AdminSidebar() {
             Dashboard
           </Link>
           <Link 
-            href="/admin/users" 
+            href="/admin/users"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/users') 
                 ? 'text-white bg-blue-600' 
@@ -38,7 +38,7 @@ export default function AdminSidebar() {
             Manajemen Pengguna
           </Link>
           <Link 
-            href="/admin/students" 
+            href="/admin/students"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/students') 
                 ? 'text-white bg-blue-600' 
@@ -48,7 +48,7 @@ export default function AdminSidebar() {
             Data Siswa
           </Link>
           <Link 
-            href="/admin/teachers" 
+            href="/admin/teachers"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/teachers') 
                 ? 'text-white bg-blue-600' 
@@ -58,7 +58,7 @@ export default function AdminSidebar() {
             Data Guru
           </Link>
           <Link 
-            href="/admin/classes" 
+            href="/admin/classes"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/classes') 
                 ? 'text-white bg-blue-600' 
@@ -68,7 +68,7 @@ export default function AdminSidebar() {
             Data Kelas
           </Link>
           <Link 
-            href="/admin/subjects" 
+            href="/admin/subjects"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/subjects') 
                 ? 'text-white bg-blue-600' 
@@ -78,7 +78,7 @@ export default function AdminSidebar() {
             Data Mata Pelajaran
           </Link>
           <Link 
-            href="/admin/activity-log" 
+            href="/admin/activity-log"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/activity-log') 
                 ? 'text-white bg-blue-600' 
@@ -88,7 +88,7 @@ export default function AdminSidebar() {
             Log Aktivitas
           </Link>
           <Link 
-            href="/admin/reports" 
+            href="/admin/reports"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/reports') 
                 ? 'text-white bg-blue-600' 

@@ -1,7 +1,31 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Periksa apakah pengguna sudah login
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Decode token untuk mendapatkan informasi pengguna
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload.role === 'admin') {
+            router.push('/admin/dashboard');
+          } else if (payload.role === 'guru') {
+            router.push('/guru/dashboard');
+          }
+        } catch (error) {
+          console.error('Error decoding token:', error);
+        }
+      }
+    }
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Head>

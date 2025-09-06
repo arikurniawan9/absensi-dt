@@ -55,7 +55,7 @@ export default function GuruLayout({ title, children }) {
               <div className="p-6">
                 <nav className="space-y-2">
                   <Link 
-                    href="/guru/dashboard" 
+                    href="/guru/dashboard"
                     className={`block px-4 py-2 text-sm font-medium rounded-md ${
                       isActive('/guru/dashboard') 
                         ? 'text-white bg-blue-600' 
@@ -65,7 +65,7 @@ export default function GuruLayout({ title, children }) {
                     Dashboard
                   </Link>
                   <Link 
-                    href="/guru/absensi" 
+                    href="/guru/absensi"
                     className={`block px-4 py-2 text-sm font-medium rounded-md ${
                       isActive('/guru/absensi') 
                         ? 'text-white bg-blue-600' 
@@ -75,7 +75,7 @@ export default function GuruLayout({ title, children }) {
                     Absensi Siswa
                   </Link>
                   <Link 
-                    href="/guru/profile" 
+                    href="/guru/profile"
                     className={`block px-4 py-2 text-sm font-medium rounded-md ${
                       isActive('/guru/profile') 
                         ? 'text-white bg-blue-600' 
