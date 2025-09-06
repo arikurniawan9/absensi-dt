@@ -27,13 +27,8 @@ model Siswa {
   id          Int      @id @default(autoincrement())
   nis         String   @unique
   nama        String
-  jenisKelamin String? // Laki-laki atau Perempuan
+  jenisKelamin String?
   kelasId     Int
-  tanggalLahir DateTime?
-  alamat      String?
-  noTelp      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
   kelas     Kelas   @relation(fields: [kelasId], references: [id])
   absensis  Absensi[]

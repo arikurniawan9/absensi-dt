@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'POST') {
     try {
-      const { nis, nama, jenisKelamin, kelasId, tanggalLahir, alamat, noTelp } = req.body;
+      const { nis, nama, jenisKelamin, kelasId } = req.body;
 
       // Validasi input
       if (!nis || !nama || !jenisKelamin || !kelasId) {
@@ -121,10 +121,7 @@ export default async function handler(req, res) {
           nis,
           nama,
           jenisKelamin,
-          kelasId: parseInt(kelasId),
-          tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
-          alamat: alamat || null,
-          noTelp: noTelp || null
+          kelasId: parseInt(kelasId)
         },
         include: {
           kelas: {

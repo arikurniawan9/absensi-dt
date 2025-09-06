@@ -121,7 +121,8 @@ export default async function handler(req, res) {
               if (!kelas) {
                 kelas = existingClasses.find(k => 
                   `${k.tingkat}-${k.namaKelas}` === kelasName ||
-                  `${k.tingkat} ${k.namaKelas}` === kelasName
+                  `${k.tingkat} ${k.namaKelas}` === kelasName ||
+                  `${k.tingkat}${k.namaKelas}` === kelasName
                 );
               }
               

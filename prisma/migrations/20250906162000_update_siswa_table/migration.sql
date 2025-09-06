@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Siswa" DROP COLUMN IF EXISTS "alamat",
+DROP COLUMN IF EXISTS "noTelp",
+DROP COLUMN IF EXISTS "tanggalLahir";

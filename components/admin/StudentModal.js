@@ -6,10 +6,7 @@ export default function StudentModal({ isOpen, onClose, studentData, kelasList, 
     nis: '',
     nama: '',
     jenisKelamin: '',
-    kelasId: '',
-    tanggalLahir: '',
-    alamat: '',
-    noTelp: ''
+    kelasId: ''
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -22,20 +19,14 @@ export default function StudentModal({ isOpen, onClose, studentData, kelasList, 
           nis: studentData.nis || '',
           nama: studentData.nama || '',
           jenisKelamin: studentData.jenisKelamin || '',
-          kelasId: studentData.kelas?.id?.toString() || '',
-          tanggalLahir: studentData.tanggalLahir ? new Date(studentData.tanggalLahir).toISOString().split('T')[0] : '',
-          alamat: studentData.alamat || '',
-          noTelp: studentData.noTelp || ''
+          kelasId: studentData.kelas?.id?.toString() || ''
         });
       } else {
         setFormData({
           nis: '',
           nama: '',
           jenisKelamin: '',
-          kelasId: '',
-          tanggalLahir: '',
-          alamat: '',
-          noTelp: ''
+          kelasId: ''
         });
       }
       setErrors({});
@@ -202,50 +193,6 @@ export default function StudentModal({ isOpen, onClose, studentData, kelasList, 
                       {errors.kelasId && (
                         <p className="mt-1 text-sm text-red-600">{errors.kelasId}</p>
                       )}
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="tanggalLahir" className="block text-sm font-medium text-gray-700 mb-1">
-                        Tanggal Lahir (Opsional)
-                      </label>
-                      <input
-                        type="date"
-                        id="tanggalLahir"
-                        name="tanggalLahir"
-                        value={formData.tanggalLahir}
-                        onChange={handleChange}
-                        className="form-input"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="alamat" className="block text-sm font-medium text-gray-700 mb-1">
-                        Alamat (Opsional)
-                      </label>
-                      <textarea
-                        id="alamat"
-                        name="alamat"
-                        value={formData.alamat}
-                        onChange={handleChange}
-                        rows={3}
-                        className="form-input"
-                        placeholder="Masukkan alamat"
-                      ></textarea>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="noTelp" className="block text-sm font-medium text-gray-700 mb-1">
-                        No. Telepon (Opsional)
-                      </label>
-                      <input
-                        type="text"
-                        id="noTelp"
-                        name="noTelp"
-                        value={formData.noTelp}
-                        onChange={handleChange}
-                        className="form-input"
-                        placeholder="Masukkan no. telepon"
-                      />
                     </div>
                   </form>
                 </div>
