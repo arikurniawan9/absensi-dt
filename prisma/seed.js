@@ -10,8 +10,10 @@ async function main() {
   const guruPassword = await bcrypt.hash('guru123', 10);
 
   // Membuat user admin
-  const admin = await prisma.user.create({
-    data: {
+  const admin = await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: {},
+    create: {
       username: 'admin',
       password: adminPassword,
       role: 'admin',
@@ -22,8 +24,10 @@ async function main() {
   });
 
   // Membuat user guru
-  const guru = await prisma.user.create({
-    data: {
+  const guru = await prisma.user.upsert({
+    where: { username: 'guru' },
+    update: {},
+    create: {
       username: 'guru',
       password: guruPassword,
       role: 'guru',
