@@ -75,6 +75,17 @@ export default async function handler(req, res) {
             errors: []
           };
           
+          // Dapatkan daftar kelas yang ada
+          const existingClasses = await prisma.kelas.findMany({
+            select: {
+              id: true,
+              namaKelas: true,
+              tingkat: true
+            }
+          });
+          
+          console.log('Existing classes:', existingClasses);
+          
           for (let i = 0; i < data.length; i++) {
             const row = data[i];
             const rowNum = i + 2; // +2 karena header dan index dimulai dari 0
@@ -96,15 +107,28 @@ export default async function handler(req, res) {
               }
               
               // Cari kelas berdasarkan nama
-              const kelas = await prisma.kelas.findFirst({
-                where: { 
-                  namaKelas: row.kelas.toString()
-                }
-              });
+              // Kita perlu mencocokkan format yang benar
+              const kelasName = row.kelas.toString().trim();
+              console.log(`Mencari kelas: ${kelasName}`);
+              
+              // Coba beberapa format pencocokan
+              let kelas = null;
+              
+              // Format 1: Cocokkan nama kelas langsung
+              kelas = existingClasses.find(k => k.namaKelas === kelasName);
+              
+              // Jika tidak ditemukan, coba format lain
+              if (!kelas) {
+                kelas = existingClasses.find(k => 
+                  `${k.tingkat}-${k.namaKelas}` === kelasName ||
+                  `${k.tingkat} ${k.namaKelas}` === kelasName
+                );
+              }
               
               if (!kelas) {
                 results.failed++;
-                results.errors.push(`Baris ${rowNum}: Kelas ${row.kelas} tidak ditemukan`);
+                const availableClasses = existingClasses.map(k => `${k.tingkat}-${k.namaKelas}`).join(', ');
+                results.errors.push(`Baris ${rowNum}: Kelas ${kelasName} tidak ditemukan. Kelas yang tersedia: ${availableClasses}`);
                 continue;
               }
               
@@ -133,6 +157,7 @@ export default async function handler(req, res) {
             } catch (error) {
               results.failed++;
               results.errors.push(`Baris ${rowNum}: ${error.message}`);
+              console.error(`Error processing row ${rowNum}:`, error);
             }
           }
           
@@ -141,15 +166,15 @@ export default async function handler(req, res) {
             results
           });
         } catch (error) {
-          console.error(error);
-          res.status(500).json({ message: 'Terjadi kesalahan saat memproses file' });
+          console.error('Error processing file:', error);
+          res.status(500).json({ message: 'Terjadi kesalahan saat memproses file: ' + error.message });
         }
       });
       
       req.pipe(bb);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+      console.error('Error in import handler:', error);
+      res.status(500).json({ message: 'Terjadi kesalahan pada server: ' + error.message });
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
