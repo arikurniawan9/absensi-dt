@@ -5,6 +5,30 @@ Semua perubahan penting pada proyek "Aplikasi Absensi Siswa" akan dicatat dalam 
 Format berdasarkan [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 dan proyek ini menggunakan [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-09-06
+
+### Added
+- Halaman profile untuk guru dengan fitur pengaturan akun
+- Penyederhanaan menu navigasi untuk guru (hanya absensi dan pengaturan akun)
+- Dokumentasi pengguna yang diperbarui
+
+### Changed
+- Memperbarui struktur menu guru agar lebih sederhana dan fokus
+- Memperbarui layout dan sidebar untuk guru
+- Memperbarui dokumentasi user manual
+
+### Deprecated
+- - N/A
+
+### Removed
+- Beberapa menu yang tidak relevan dari navigasi guru
+
+### Fixed
+- - N/A
+
+### Security
+- - N/A
+
 ## [1.0.0] - 2023-07-15
 
 ### Added

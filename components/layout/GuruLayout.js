@@ -47,7 +47,7 @@ export default function GuruLayout({ title, children }) {
           <div className="lg:col-span-1">
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Menu Utama</h3>
+                <h3 className="text-lg font-medium text-gray-900">Menu Guru</h3>
               </div>
               <div className="p-6">
                 <nav className="space-y-2">
@@ -72,34 +72,14 @@ export default function GuruLayout({ title, children }) {
                     Absensi Siswa
                   </Link>
                   <Link 
-                    href="/guru/jadwal" 
+                    href="/guru/profile" 
                     className={`block px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive('/guru/jadwal') 
+                      isActive('/guru/profile') 
                         ? 'text-white bg-blue-600' 
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Jadwal Mengajar
-                  </Link>
-                  <Link 
-                    href="/guru/history" 
-                    className={`block px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive('/guru/history') 
-                        ? 'text-white bg-blue-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    Riwayat Absensi
-                  </Link>
-                  <Link 
-                    href="/guru/report" 
-                    className={`block px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive('/guru/report') 
-                        ? 'text-white bg-blue-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    Laporan
+                    Pengaturan Akun
                   </Link>
                 </nav>
               </div>

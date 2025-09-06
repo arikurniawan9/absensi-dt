@@ -13,8 +13,7 @@
 6. [Panduan Guru](#panduan-guru)
    - [Dashboard Guru](#dashboard-guru)
    - [Absensi Siswa](#absensi-siswa)
-   - [Jadwal Mengajar](#jadwal-mengajar)
-   - [Riwayat Absensi](#riwayat-absensi)
+   - [Pengaturan Akun](#pengaturan-akun)
 7. [Fitur Keamanan](#fitur-keamanan)
 8. [Troubleshooting](#troubleshooting)
 
@@ -107,9 +106,9 @@ Fitur ini menampilkan semua aktivitas yang dilakukan oleh pengguna dalam sistem:
 ### Dashboard Guru
 
 Dashboard guru menampilkan:
+- Selamat datang dan informasi dasar
 - Jadwal mengajar hari ini
 - Riwayat absensi terbaru
-- Notifikasi tentang jadwal mengajar
 
 ### Absensi Siswa
 
@@ -125,25 +124,18 @@ Fitur ini digunakan untuk menginput absensi siswa:
 5. Tambahkan keterangan jika diperlukan
 6. Klik "Simpan Absensi"
 
-### Jadwal Mengajar
+### Pengaturan Akun
 
-Fitur ini menampilkan jadwal mengajar guru:
-1. Klik menu "Jadwal Mengajar" di sidebar
-2. Lihat jadwal mengajar berdasarkan hari
-3. Informasi yang ditampilkan:
-   - Hari mengajar
-   - Waktu mengajar
-   - Kelas
-   - Mata pelajaran
-   - Ruang kelas
-
-### Riwayat Absensi
-
-Fitur ini menampilkan riwayat absensi yang telah diinput:
-1. Klik menu "Riwayat Absensi" di sidebar
-2. Pilih kelas dan periode waktu
-3. Lihat daftar absensi
-4. Klik "Lihat Detail" untuk melihat detail absensi siswa
+Fitur ini memungkinkan guru untuk mengelola profil dan password mereka:
+1. Klik menu "Pengaturan Akun" di sidebar
+2. Di tab "Informasi Profil":
+   - Lihat dan edit informasi pribadi seperti nama, NIP, email, alamat, dan no. telepon
+   - Klik "Simpan Perubahan" untuk menyimpan perubahan
+3. Di tab "Ubah Password":
+   - Masukkan password saat ini
+   - Masukkan password baru
+   - Konfirmasi password baru
+   - Klik "Ubah Password" untuk mengganti password
 
 ## Fitur Keamanan
 
@@ -199,15 +191,11 @@ Kami selalu terbuka untuk feedback dan saran untuk meningkatkan aplikasi ini. Si
 - Fitur absensi siswa
 - Log aktivitas pengguna
 
-**Versi 1.1.0** (Agustus 2023)
-- Penambahan fitur laporan
+**Versi 1.1.0** (September 2023)
+- Penyederhanaan menu untuk guru
+- Penambahan halaman pengaturan akun untuk guru
 - Perbaikan bug minor
-- Peningkatan performa
-
-**Versi 1.2.0** (September 2023)
-- Penambahan fitur export data
-- Peningkatan UI/UX
-- Penambahan validasi data
+- Peningkatan dokumentasi
 
 ## Lisensi
 
