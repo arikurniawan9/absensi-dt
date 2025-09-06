@@ -27,6 +27,7 @@ model Siswa {
   id          Int      @id @default(autoincrement())
   nis         String   @unique
   nama        String
+  jenisKelamin String? // Laki-laki atau Perempuan
   kelasId     Int
   tanggalLahir DateTime?
   alamat      String?
