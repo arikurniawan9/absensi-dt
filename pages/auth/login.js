@@ -46,7 +46,9 @@ export default function Login() {
       
       if (response.ok) {
         // Simpan token di localStorage
-        localStorage.setItem('token', data.token);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', data.token);
+        }
         
         // Redirect berdasarkan role pengguna
         if (data.user.role === 'admin') {

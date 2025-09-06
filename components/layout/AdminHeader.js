@@ -6,8 +6,11 @@ export default function AdminHeader({ title }) {
   const router = useRouter();
 
   const handleLogout = () => {
-    // Hapus token dari localStorage atau cookies
-    // Di sini kita hanya redirect ke halaman login
+    // Hapus token dari localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    // Redirect ke halaman login
     router.push('/auth/login');
   };
 

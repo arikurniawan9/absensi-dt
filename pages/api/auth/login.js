@@ -3,7 +3,16 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
+let prisma;
+
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient();
+} else {
+  if (!global.prisma) {
+    global.prisma = new PrismaClient();
+  }
+  prisma = global.prisma;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -39,9 +48,10 @@ export default async function handler(req, res) {
       { 
         id: user.id, 
         username: user.username, 
-        role: user.role 
+        role: user.role,
+        nama: user.nama
       },
-      process.env.JWT_SECRET || 'secretkey', // Di produksi, gunakan environment variable
+      process.env.JWT_SECRET || 'secretkey',
       { expiresIn: '1h' }
     );
 
@@ -55,7 +65,7 @@ export default async function handler(req, res) {
       user: userWithoutPassword
     });
   } catch (error) {
-    console.error(error);
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Terjadi kesalahan pada server' });
   }
 }
