@@ -10,7 +10,8 @@ export default function UserManagement() {
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
-    role: ''
+    role: '',
+    search: ''
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -20,6 +21,7 @@ export default function UserManagement() {
   });
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   // Fungsi untuk mengambil daftar user
   const fetchUsers = async () => {
@@ -28,7 +30,14 @@ export default function UserManagement() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/users?page=${filters.page}&limit=${filters.limit}&role=${filters.role}`, {
+      const queryParams = new URLSearchParams({
+        page: filters.page,
+        limit: filters.limit,
+        role: filters.role,
+        search: filters.search
+      }).toString();
+      
+      const response = await fetch(`/api/admin/users?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -116,6 +125,27 @@ export default function UserManagement() {
     }
   };
 
+  // Fungsi untuk menangani perubahan pencarian dengan debounce
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    
+    // Clear timeout sebelumnya
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set timeout baru
+    const newTimeout = setTimeout(() => {
+      setFilters(prev => ({
+        ...prev,
+        search: value,
+        page: 1 // Reset ke halaman pertama saat pencarian berubah
+      }));
+    }, 300); // 300ms debounce
+    
+    setSearchTimeout(newTimeout);
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [filters]);
@@ -146,6 +176,15 @@ export default function UserManagement() {
     setEditingUser(null);
   };
 
+  // Cleanup timeout saat komponen unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
   return (
     <AdminLayout title="Manajemen Pengguna">
       {showForm ? (
@@ -168,7 +207,21 @@ export default function UserManagement() {
           
           <div className="p-6">
             {/* Filter */}
-            <div className="mb-6 flex space-x-4">
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+                  Cari
+                </label>
+                <input
+                  type="text"
+                  id="search"
+                  placeholder="Cari username, nama, atau email..."
+                  defaultValue={filters.search}
+                  onChange={handleSearchChange}
+                  className="form-input"
+                />
+              </div>
+              
               <div>
                 <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                   Role
@@ -223,51 +276,59 @@ export default function UserManagement() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {users.map((user) => (
-                        <tr key={user.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {user.username}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.nama}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              user.role === 'admin' 
-                                ? 'bg-purple-100 text-purple-800' 
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {user.role}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.email || '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              user.status 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {user.status ? 'Aktif' : 'Nonaktif'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() => handleEditUser(user)}
-                              className="text-indigo-600 hover:text-indigo-900 mr-3"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => deleteUser(user.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Hapus
-                            </button>
+                      {users.length > 0 ? (
+                        users.map((user) => (
+                          <tr key={user.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {user.username}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {user.nama}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                user.role === 'admin' 
+                                  ? 'bg-purple-100 text-purple-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {user.role}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {user.email || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                user.status 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {user.status ? 'Aktif' : 'Nonaktif'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button
+                                onClick={() => handleEditUser(user)}
+                                className="text-indigo-600 hover:text-indigo-900 mr-3"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteUser(user.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Hapus
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                            Tidak ada data pengguna yang ditemukan
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>

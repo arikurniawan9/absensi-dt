@@ -29,13 +29,24 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const { page = 1, limit = 10, role } = req.query;
+      const { page = 1, limit = 10, role, search } = req.query;
       const offset = (parseInt(page) - 1) * parseInt(limit);
 
       // Build filter conditions
       let where = {};
+      
+      // Filter berdasarkan role
       if (role) {
         where.role = role;
+      }
+      
+      // Filter berdasarkan pencarian
+      if (search) {
+        where.OR = [
+          { username: { contains: search, mode: 'insensitive' } },
+          { nama: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } }
+        ];
       }
 
       // Dapatkan daftar user dengan pagination
