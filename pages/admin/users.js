@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import UserForm from '../../components/admin/UserForm';
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -199,9 +200,10 @@ export default function UserManagement() {
             <h3 className="text-lg font-medium text-gray-900">Daftar Pengguna</h3>
             <button
               onClick={handleAddUser}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300 flex items-center space-x-1"
+              title="Tambah Pengguna"
             >
-              Tambah Pengguna
+              <FaPlus />
             </button>
           </div>
           
@@ -235,6 +237,23 @@ export default function UserManagement() {
                   <option value="">Semua Role</option>
                   <option value="admin">Admin</option>
                   <option value="guru">Guru</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="limit" className="block text-sm font-medium text-gray-700 mb-1">
+                  Tampilkan
+                </label>
+                <select
+                  id="limit"
+                  value={filters.limit}
+                  onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                  className="form-input"
+                >
+                  <option value="10">10</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="150">150</option>
+                  <option value="200">200</option>
                 </select>
               </div>
             </div>
@@ -278,7 +297,7 @@ export default function UserManagement() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {users.length > 0 ? (
                         users.map((user) => (
-                          <tr key={user.id}>
+                          <tr key={user.id} className="hover:bg-gray-100">
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {user.username}
                             </td>
@@ -309,15 +328,17 @@ export default function UserManagement() {
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <button
                                 onClick={() => handleEditUser(user)}
-                                className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                className="text-indigo-600 hover:text-indigo-900 mr-3 inline-flex items-center space-x-1"
+                                title="Edit"
                               >
-                                Edit
+                                <FaEdit />
                               </button>
                               <button
                                 onClick={() => deleteUser(user.id)}
-                                className="text-red-600 hover:text-red-900"
+                                className="text-red-600 hover:text-red-900 inline-flex items-center space-x-1"
+                                title="Hapus"
                               >
-                                Hapus
+                                <FaTrash />
                               </button>
                             </td>
                           </tr>
@@ -339,7 +360,18 @@ export default function UserManagement() {
                     <div className="text-sm text-gray-700">
                       Menampilkan halaman {pagination.page} dari {pagination.totalPages}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={() => handlePageChange(1)}
+                        disabled={pagination.page === 1}
+                        className={`px-3 py-1 rounded-md text-sm font-medium ${
+                          pagination.page === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        First
+                      </button>
                       <button
                         onClick={() => handlePageChange(pagination.page - 1)}
                         disabled={pagination.page === 1}
@@ -349,8 +381,30 @@ export default function UserManagement() {
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         }`}
                       >
-                        Sebelumnya
+                        Previous
                       </button>
+                      {[...Array(pagination.totalPages).keys()].map((pageNumber) => {
+                        const page = pageNumber + 1;
+                        // Tampilkan hanya beberapa halaman di sekitar halaman aktif
+                        if (page === 1 || page === pagination.totalPages || (page >= pagination.page - 2 && page <= pagination.page + 2)) {
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                                page === pagination.page
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        } else if (page === pagination.page - 3 || page === pagination.page + 3) {
+                          return <span key={page} className="px-3 py-1 text-sm font-medium">...</span>;
+                        }
+                        return null;
+                      })}
                       <button
                         onClick={() => handlePageChange(pagination.page + 1)}
                         disabled={pagination.page === pagination.totalPages}
@@ -360,7 +414,18 @@ export default function UserManagement() {
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         }`}
                       >
-                        Selanjutnya
+                        Next
+                      </button>
+                      <button
+                        onClick={() => handlePageChange(pagination.totalPages)}
+                        disabled={pagination.page === pagination.totalPages}
+                        className={`px-3 py-1 rounded-md text-sm font-medium ${
+                          pagination.page === pagination.totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Last
                       </button>
                     </div>
                   </div>

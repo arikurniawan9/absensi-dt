@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import ClassModal from '../../components/admin/ClassModal';
+import { FaFileDownload, FaFileUpload, FaFileExport, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 
 export default function ClassManagement() {
   const [classes, setClasses] = useState([]);
@@ -307,12 +308,15 @@ export default function ClassManagement() {
           <div className="flex space-x-2">
             <button
               onClick={downloadTemplate}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300 flex items-center space-x-1"
+              title="Download Template"
             >
-              Download Template
+              <FaFileDownload />
             </button>
-            <label className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300 cursor-pointer">
-              {importLoading ? 'Mengimport...' : 'Import Excel'}
+            <label className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300 cursor-pointer flex items-center space-x-1"
+              title="Import Excel"
+            >
+              {importLoading ? 'Mengimport...' : <FaFileUpload />}
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -323,33 +327,54 @@ export default function ClassManagement() {
             </label>
             <button
               onClick={handleExport}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300 flex items-center space-x-1"
+              title="Export Excel"
             >
-              Export Excel
+              <FaFileExport />
             </button>
             <button
               onClick={handleAddClass}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300 flex items-center space-x-1"
+              title="Tambah Kelas"
             >
-              Tambah Kelas
+              <FaPlus />
             </button>
           </div>
         </div>
         
         <div className="p-6">
           {/* Filter */}
-          <div className="mb-6">
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-              Cari
-            </label>
-            <input
-              type="text"
-              id="search"
-              placeholder="Cari nama kelas, tingkat, atau tahun ajaran..."
-              defaultValue={filters.search}
-              onChange={handleSearchChange}
-              className="form-input w-full md:w-1/3"
-            />
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+                Cari
+              </label>
+              <input
+                type="text"
+                id="search"
+                placeholder="Cari nama kelas, tingkat, atau tahun ajaran..."
+                defaultValue={filters.search}
+                onChange={handleSearchChange}
+                className="form-input"
+              />
+            </div>
+            <div>
+              <label htmlFor="limit" className="block text-sm font-medium text-gray-700 mb-1">
+                Tampilkan
+              </label>
+              <select
+                id="limit"
+                value={filters.limit}
+                onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                className="form-input"
+              >
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="150">150</option>
+                <option value="200">200</option>
+              </select>
+            </div>
           </div>
           
           {/* Hasil Import */}
@@ -411,7 +436,7 @@ export default function ClassManagement() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {classes.length > 0 ? (
                       classes.map((kelas) => (
-                        <tr key={kelas.id}>
+                        <tr key={kelas.id} className="hover:bg-gray-100">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {kelas.namaKelas}
                           </td>
@@ -427,15 +452,17 @@ export default function ClassManagement() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button
                               onClick={() => handleEditClass(kelas)}
-                              className="text-indigo-600 hover:text-indigo-900 mr-3"
+                              className="text-indigo-600 hover:text-indigo-900 mr-3 inline-flex items-center space-x-1"
+                              title="Edit"
                             >
-                              Edit
+                              <FaEdit />
                             </button>
                             <button
                               onClick={() => deleteClass(kelas.id)}
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-600 hover:text-red-900 inline-flex items-center space-x-1"
+                              title="Hapus"
                             >
-                              Hapus
+                              <FaTrash />
                             </button>
                           </td>
                         </tr>
@@ -457,7 +484,18 @@ export default function ClassManagement() {
                   <div className="text-sm text-gray-700">
                     Menampilkan halaman {pagination.page} dari {pagination.totalPages}
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={pagination.page === 1}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        pagination.page === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      First
+                    </button>
                     <button
                       onClick={() => handlePageChange(pagination.page - 1)}
                       disabled={pagination.page === 1}
@@ -467,8 +505,30 @@ export default function ClassManagement() {
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                     >
-                      Sebelumnya
+                      Previous
                     </button>
+                    {[...Array(pagination.totalPages).keys()].map((pageNumber) => {
+                      const page = pageNumber + 1;
+                      // Tampilkan hanya beberapa halaman di sekitar halaman aktif
+                      if (page === 1 || page === pagination.totalPages || (page >= pagination.page - 2 && page <= pagination.page + 2)) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1 rounded-md text-sm font-medium ${
+                              page === pagination.page
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (page === pagination.page - 3 || page === pagination.page + 3) {
+                        return <span key={page} className="px-3 py-1 text-sm font-medium">...</span>;
+                      }
+                      return null;
+                    })}
                     <button
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={pagination.page === pagination.totalPages}
@@ -478,7 +538,18 @@ export default function ClassManagement() {
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                     >
-                      Selanjutnya
+                      Next
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(pagination.totalPages)}
+                      disabled={pagination.page === pagination.totalPages}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        pagination.page === pagination.totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Last
                     </button>
                   </div>
                 </div>

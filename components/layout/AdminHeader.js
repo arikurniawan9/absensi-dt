@@ -1,8 +1,9 @@
 // components/layout/AdminHeader.js
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { FaBars } from 'react-icons/fa';
 
-export default function AdminHeader({ title }) {
+export default function AdminHeader({ title, toggleSidebar }) {
   const router = useRouter();
 
   const handleLogout = () => {
@@ -17,7 +18,15 @@ export default function AdminHeader({ title }) {
   return (
     <header className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <div className="flex items-center">
+          <button
+            onClick={toggleSidebar}
+            className="text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600 lg:hidden mr-4"
+          >
+            <FaBars className="h-6 w-6" />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        </div>
         <div className="flex items-center space-x-4">
           <span className="text-gray-700">Admin</span>
           <button

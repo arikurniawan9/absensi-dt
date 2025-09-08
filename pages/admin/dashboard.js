@@ -1,24 +1,75 @@
 // pages/admin/dashboard.js
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AdminLayout from '../../components/layout/AdminLayout';
 import DashboardStats from '../../components/admin/DashboardStats';
 import RecentActivities from '../../components/admin/RecentActivities';
 
 export default function AdminDashboard() {
-  // Data dummy untuk dashboard
-  const stats = [
-    { name: 'Total Siswa', value: '142' },
-    { name: 'Total Guru', value: '12' },
-    { name: 'Total Kelas', value: '6' },
-    { name: 'Total Mata Pelajaran', value: '15' },
-  ];
+  const [stats, setStats] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState('');
 
-  const recentActivities = [
-    { id: 1, user: 'Budi Santoso', action: 'Login', time: '2 menit yang lalu' },
-    { id: 2, user: 'Ani Putri', action: 'Menginput absensi kelas X-A', time: '15 menit yang lalu' },
-    { id: 3, user: 'Joko Widodo', action: 'Login', time: '1 jam yang lalu' },
-    { id: 4, user: 'Siti Nurhaliza', action: 'Menginput absensi kelas XI-B', time: '2 jam yang lalu' },
-  ];
+  const [activities, setActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+  const [activitiesError, setActivitiesError] = useState('');
+
+  const fetchStats = async () => {
+    setLoadingStats(true);
+    setStatsError('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/dashboard-stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setStats([
+          { name: 'Total Siswa', value: data.totalStudents },
+          { name: 'Total Kelas', value: data.totalClasses },
+          { name: 'Total Pengguna', value: data.totalUsers },
+        ]);
+      } else {
+        setStatsError(data.message || 'Gagal mengambil statistik dashboard');
+      }
+    } catch (err) {
+      setStatsError('Terjadi kesalahan koneksi saat mengambil statistik');
+      console.error(err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const fetchActivities = async () => {
+    setLoadingActivities(true);
+    setActivitiesError('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/activity-log?limit=5', { // Fetch last 5 activities
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setActivities(data.logs);
+      } else {
+        setActivitiesError(data.message || 'Gagal mengambil log aktivitas');
+      }
+    } catch (err) {
+      setActivitiesError('Terjadi kesalahan koneksi saat mengambil log aktivitas');
+      console.error(err);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    fetchActivities();
+  }, []);
 
   return (
     <AdminLayout title="Dashboard Admin">
@@ -29,11 +80,33 @@ export default function AdminDashboard() {
 
       {/* Stats Section */}
       <div className="mb-8">
-        <DashboardStats stats={stats} />
+        {loadingStats ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Memuat statistik...</p>
+          </div>
+        ) : statsError ? (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {statsError}
+          </div>
+        ) : (
+          <DashboardStats stats={stats} />
+        )}
       </div>
 
       {/* Recent Activities */}
-      <RecentActivities activities={recentActivities} />
+      {loadingActivities ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Memuat aktivitas terbaru...</p>
+        </div>
+      ) : activitiesError ? (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {activitiesError}
+        </div>
+      ) : (
+        <RecentActivities activities={activities} />
+      )}
     </AdminLayout>
   );
 }

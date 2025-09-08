@@ -2,89 +2,54 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { FaFilter } from 'react-icons/fa';
 
 export default function ActivityLog() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
     userId: '',
     activity: ''
   });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  });
 
   // Fungsi untuk mengambil data log aktivitas
   const fetchActivities = async () => {
     setLoading(true);
+    setError('');
     try {
-      // Di aplikasi sebenarnya, ini akan mengambil data dari API
-      // Untuk demo, kita gunakan data dummy
-      const dummyData = [
-        {
-          id: 1,
-          userId: 1,
-          activity: 'Login',
-          detail: 'User berhasil login ke sistem',
-          ipAddress: '192.168.1.100',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          createdAt: '2023-07-15T08:30:00Z',
-          user: {
-            id: 1,
-            username: 'admin',
-            nama: 'Administrator',
-            role: 'admin'
-          }
-        },
-        {
-          id: 2,
-          userId: 2,
-          activity: 'Create User',
-          detail: 'Membuat akun guru baru: budi_santoso',
-          ipAddress: '192.168.1.100',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          createdAt: '2023-07-15T09:15:00Z',
-          user: {
-            id: 1,
-            username: 'admin',
-            nama: 'Administrator',
-            role: 'admin'
-          }
-        },
-        {
-          id: 3,
-          userId: 3,
-          activity: 'Login',
-          detail: 'User berhasil login ke sistem',
-          ipAddress: '192.168.1.101',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          createdAt: '2023-07-15T10:20:00Z',
-          user: {
-            id: 3,
-            username: 'guru1',
-            nama: 'Budi Santoso',
-            role: 'guru'
-          }
-        },
-        {
-          id: 4,
-          userId: 3,
-          activity: 'Absensi',
-          detail: 'Menginput absensi kelas X-A tanggal 2023-07-15',
-          ipAddress: '192.168.1.101',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          createdAt: '2023-07-15T11:30:00Z',
-          user: {
-            id: 3,
-            username: 'guru1',
-            nama: 'Budi Santoso',
-            role: 'guru'
-          }
+      const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams({
+        page: filters.page,
+        limit: filters.limit,
+        userId: filters.userId,
+        activity: filters.activity
+      }).toString();
+
+      const response = await fetch(`/api/admin/activity-log?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      ];
-      
-      setActivities(dummyData);
-    } catch (error) {
-      console.error('Error fetching activities:', error);
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setActivities(data.logs);
+        setPagination(data.pagination);
+      } else {
+        setError(data.message || 'Gagal mengambil log aktivitas');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -107,7 +72,7 @@ export default function ActivityLog() {
           <div className="flex space-x-2">
             <input
               type="text"
-              placeholder="Filter user..."
+              placeholder="Filter user ID..."
               className="px-3 py-1 border border-gray-300 rounded-md text-sm"
               value={filters.userId}
               onChange={(e) => setFilters({...filters, userId: e.target.value})}
@@ -119,11 +84,24 @@ export default function ActivityLog() {
               value={filters.activity}
               onChange={(e) => setFilters({...filters, activity: e.target.value})}
             />
+            <select
+              id="limit"
+              value={filters.limit}
+              onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+              className="form-input"
+            >
+              <option value="10">10</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="150">150</option>
+              <option value="200">200</option>
+            </select>
             <button
               onClick={fetchActivities}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1"
+              title="Filter"
             >
-              Filter
+              <FaFilter />
             </button>
           </div>
         </div>
@@ -133,54 +111,145 @@ export default function ActivityLog() {
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
               <p className="mt-2 text-gray-600">Memuat data aktivitas...</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Aktivitas
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Detail
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Waktu
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      IP Address
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {activities.map((activity) => (
-                    <tr key={activity.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{activity.user.nama}</div>
-                        <div className="text-sm text-gray-500">{activity.user.username} ({activity.user.role})</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{activity.activity}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate" title={activity.detail}>
-                          {activity.detail}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(activity.createdAt).toLocaleString('id-ID')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {activity.ipAddress}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          ) : error ? (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
             </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Aktivitas
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Detail
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Waktu
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        IP Address
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {activities.length > 0 ? (
+                      activities.map((activity) => (
+                        <tr key={activity.id} className="hover:bg-gray-100">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{activity.user.nama}</div>
+                            <div className="text-sm text-gray-500">{activity.user.username} ({activity.user.role})</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{activity.activity}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 max-w-xs truncate" title={activity.detail}>
+                              {activity.detail}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(activity.createdAt).toLocaleString('id-ID')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {activity.ipAddress}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                          Tidak ada data aktivitas yang ditemukan
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Menampilkan halaman {pagination.page} dari {pagination.totalPages}
+                  </div>
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={pagination.page === 1}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        pagination.page === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        pagination.page === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    {[...Array(pagination.totalPages).keys()].map((pageNumber) => {
+                      const page = pageNumber + 1;
+                      // Tampilkan hanya beberapa halaman di sekitar halaman aktif
+                      if (page === 1 || page === pagination.totalPages || (page >= pagination.page - 2 && page <= pagination.page + 2)) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1 rounded-md text-sm font-medium ${
+                              page === pagination.page
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (page === pagination.page - 3 || page === pagination.page + 3) {
+                        return <span key={page} className="px-3 py-1 text-sm font-medium">...</span>;
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page === pagination.totalPages}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        pagination.page === pagination.totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(pagination.totalPages)}
+                      disabled={pagination.page === pagination.totalPages}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        pagination.page === pagination.totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Last
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
