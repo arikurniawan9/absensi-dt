@@ -54,9 +54,10 @@ export default async function handler(req, res) {
           where,
           skip: offset,
           take: parseInt(limit),
-          orderBy: {
-            createdAt: 'desc'
-          },
+          orderBy: [
+            { kelas: { namaKelas: 'asc' } },
+            { nama: 'asc' }
+          ],
           include: {
             kelas: {
               select: {
