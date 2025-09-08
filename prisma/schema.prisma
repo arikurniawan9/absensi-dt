@@ -1,3 +1,4 @@
+// prisma/schema-postgresql.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,56 +9,63 @@ datasource db {
 }
 
 model User {
-  id            Int           @id @default(autoincrement())
-  username      String        @unique
-  password      String
-  role          String        @default("guru")
-  nama          String
-  email         String?
-  status        Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  guru          Guru?
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   @default("guru") // admin, guru
+  nama      String
+  email     String?
+  status    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   logActivities LogActivity[]
+  guru          Guru?
 }
 
 model Siswa {
-  id           Int       @id @default(autoincrement())
-  nis          String    @unique
-  nama         String
-  kelasId      Int
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime
+  id          Int      @id @default(autoincrement())
+  nis         String   @unique
+  nama        String
   jenisKelamin String?
-  absensis     Absensi[]
-  kelas        Kelas     @relation(fields: [kelasId], references: [id])
+  kelasId     Int
+  tanggalLahir DateTime?
+  alamat      String?
+  noTelp      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  kelas     Kelas   @relation(fields: [kelasId], references: [id])
+  absensis  Absensi[]
 }
 
 model Guru {
-  id              Int           @id @default(autoincrement())
-  nip             String        @unique
-  nama            String
+  id            Int    @id @default(autoincrement())
+  nip           String @unique
+  nama          String
   mataPelajaranId Int
-  alamat          String?
-  noTelp          String?
-  userId          Int           @unique
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  mataPelajaran   MataPelajaran @relation(fields: [mataPelajaranId], references: [id])
-  user            User          @relation(fields: [userId], references: [id])
-  jadwals         Jadwal[]
+  alamat        String?
+  noTelp        String?
+  userId        Int    @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  mataPelajaran MataPelajaran @relation(fields: [mataPelajaranId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  jadwals       Jadwal[]
 }
 
 model Kelas {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   namaKelas   String
-  tingkat     String
+  tingkat     String   // X, XI, XII
   tahunAjaran String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  absensis    Absensi[]
-  jadwals     Jadwal[]
-  siswas      Siswa[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  siswas    Siswa[]
+  jadwals   Jadwal[]
+  absensis  Absensi[]
 }
 
 model MataPelajaran {
@@ -65,49 +73,53 @@ model MataPelajaran {
   kodeMapel String   @unique
   namaMapel String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  gurus     Guru[]
-  jadwals   Jadwal[]
+  updatedAt DateTime @default(now()) @updatedAt
+
+  gurus   Guru[]
+  jadwals Jadwal[]
 }
 
 model Jadwal {
-  id              Int           @id @default(autoincrement())
-  hari            String
-  jamMulai        String
-  jamSelesai      String
+  id              Int      @id @default(autoincrement())
+  hari            String   // Senin, Selasa, dst
+  jamMulai        String   // Format: HH:MM
+  jamSelesai      String   // Format: HH:MM
   kelasId         Int
   guruId          Int
   mataPelajaranId Int
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  absensis        Absensi[]
-  guru            Guru          @relation(fields: [guruId], references: [id])
-  kelas           Kelas         @relation(fields: [kelasId], references: [id])
-  mataPelajaran   MataPelajaran @relation(fields: [mataPelajaranId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  kelas         Kelas         @relation(fields: [kelasId], references: [id])
+  guru          Guru          @relation(fields: [guruId], references: [id])
+  mataPelajaran MataPelajaran @relation(fields: [mataPelajaranId], references: [id])
+  absensis      Absensi[]
 }
 
 model Absensi {
-  id         Int      @id @default(autoincrement())
-  tanggal    DateTime
-  status     String
-  keterangan String?
-  siswaId    Int
-  jadwalId   Int
-  kelasId    Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  jadwal     Jadwal   @relation(fields: [jadwalId], references: [id])
-  kelas      Kelas    @relation(fields: [kelasId], references: [id])
-  siswa      Siswa    @relation(fields: [siswaId], references: [id])
+  id              Int      @id @default(autoincrement())
+  tanggal         DateTime
+  status          String   // hadir, izin, sakit, alpha
+  keterangan      String?
+  siswaId         Int
+  jadwalId        Int
+  kelasId         Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  siswa   Siswa   @relation(fields: [siswaId], references: [id])
+  jadwal  Jadwal  @relation(fields: [jadwalId], references: [id])
+  kelas   Kelas   @relation(fields: [kelasId], references: [id])
 }
 
 model LogActivity {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  activity  String
-  detail    String?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  activity    String
+  detail      String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

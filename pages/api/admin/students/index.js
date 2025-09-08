@@ -116,6 +116,7 @@ export default async function handler(req, res) {
       }
 
       // Buat siswa baru
+      console.log('Request Body:', req.body);
       const newStudent = await prisma.siswa.create({
         data: {
           nis,
@@ -140,7 +141,7 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+      res.status(500).json({ message: `Terjadi kesalahan pada server: ${error.message}` });
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
