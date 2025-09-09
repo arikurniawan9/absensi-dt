@@ -12,7 +12,7 @@ export default function GuruLayout({ title, children }) {
       localStorage.removeItem('token');
     }
     // Redirect ke halaman login
-    router.push('/auth/login');
+    router.push('/auth/guru/login');
   };
 
   // Fungsi untuk menentukan apakah link aktif
@@ -73,6 +73,16 @@ export default function GuruLayout({ title, children }) {
                     }`}
                   >
                     Absensi Siswa
+                  </Link>
+                  <Link 
+                    href="/guru/jadwal"
+                    className={`block px-4 py-2 text-sm font-medium rounded-md ${
+                      isActive('/guru/jadwal') 
+                        ? 'text-white bg-blue-600' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Jadwal Mengajar
                   </Link>
                   <Link 
                     href="/guru/profile"

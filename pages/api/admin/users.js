@@ -42,10 +42,12 @@ export default async function handler(req, res) {
       
       // Filter berdasarkan pencarian
       if (search) {
+        // Untuk SQLite, kita tidak bisa menggunakan mode: 'insensitive'
+        // Jadi kita gunakan pendekatan manual dengan beberapa kondisi
         where.OR = [
-          { username: { contains: search, mode: 'insensitive' } },
-          { nama: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } }
+          { username: { contains: search } },
+          { nama: { contains: search } },
+          { email: { contains: search } }
         ];
       }
 

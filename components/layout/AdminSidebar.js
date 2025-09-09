@@ -45,6 +45,16 @@ export default function AdminSidebar({ toggleSidebar }) {
             Manajemen Pengguna
           </Link>
           <Link 
+            href="/admin/guru"
+            className={`block px-4 py-2 text-sm font-medium rounded-md ${
+              isActive('/admin/guru') 
+                ? 'text-white bg-blue-600' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Data Guru
+          </Link>
+          <Link 
             href="/admin/students"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/students') 
@@ -64,6 +74,17 @@ export default function AdminSidebar({ toggleSidebar }) {
             }`}
           >
             Data Kelas
+          </Link>
+          
+          <Link 
+            href="/admin/mata-pelajaran"
+            className={`block px-4 py-2 text-sm font-medium rounded-md ${
+              isActive('/admin/mata-pelajaran') 
+                ? 'text-white bg-blue-600' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Data Mata Pelajaran
           </Link>
           
           <Link 

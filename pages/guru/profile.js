@@ -1,14 +1,15 @@
 // pages/guru/profile.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GuruLayout from '../../components/layout/GuruLayout';
+import { withGuruAuth } from '../../middleware/guruRoute';
 
 export default function GuruProfile() {
   const [profileData, setProfileData] = useState({
-    nama: 'Guru Pertama',
-    nip: '123456789',
-    email: 'guru@absensisiswa.com',
-    alamat: 'Jl. Pendidikan No. 123',
-    noTelp: '081234567890'
+    nama: '',
+    nip: '',
+    email: '',
+    alamat: '',
+    noTelp: ''
   });
   
   const [passwordData, setPasswordData] = useState({
@@ -16,6 +17,47 @@ export default function GuruProfile() {
     newPassword: '',
     confirmNewPassword: ''
   });
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Fungsi untuk mengambil data profil guru
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('/api/guru/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setProfileData({
+          nama: data.guru.nama,
+          nip: data.guru.nip,
+          email: data.user.email || '',
+          alamat: data.guru.alamat || '',
+          noTelp: data.guru.noTelp || ''
+        });
+      } else {
+        setError(data.message || 'Gagal memuat data profil');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +65,9 @@ export default function GuruProfile() {
       ...prev,
       [name]: value
     }));
+    
+    // Clear success message when user starts editing
+    if (success) setSuccess('');
   };
 
   const handlePasswordChange = (e) => {
@@ -31,36 +76,126 @@ export default function GuruProfile() {
       ...prev,
       [name]: value
     }));
+    
+    // Clear success message when user starts editing
+    if (success) setSuccess('');
   };
 
-  const handleProfileSubmit = (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    // Di aplikasi sebenarnya, ini akan mengirim data ke server
-    alert('Profil berhasil diperbarui!');
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('/api/guru/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(profileData)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSuccess('Profil berhasil diperbarui!');
+        setError('');
+      } else {
+        setError(data.message || 'Gagal memperbarui profil');
+        setSuccess('');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      setSuccess('');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    
     // Validasi password
     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-      alert('Password baru dan konfirmasi password tidak cocok!');
+      setError('Password baru dan konfirmasi password tidak cocok!');
+      setSuccess('');
       return;
     }
     
-    // Di aplikasi sebenarnya, ini akan mengirim data ke server
-    alert('Password berhasil diperbarui!');
+    if (passwordData.newPassword.length < 6) {
+      setError('Password baru minimal 6 karakter');
+      setSuccess('');
+      return;
+    }
     
-    // Reset form password
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmNewPassword: ''
-    });
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('/api/guru/profile/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSuccess('Password berhasil diperbarui!');
+        setError('');
+        // Reset form password
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmNewPassword: ''
+        });
+      } else {
+        setError(data.message || 'Gagal memperbarui password');
+        setSuccess('');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      setSuccess('');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading && !profileData.nama) {
+    return (
+      <GuruLayout title="Pengaturan Akun">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        </div>
+      </GuruLayout>
+    );
+  }
 
   return (
     <GuruLayout title="Pengaturan Akun">
       <div className="space-y-8">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+            {success}
+          </div>
+        )}
+        
         {/* Form Profil */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
@@ -96,7 +231,9 @@ export default function GuruProfile() {
                     onChange={handleProfileChange}
                     className="form-input"
                     required
+                    readOnly
                   />
+                  <p className="mt-1 text-sm text-gray-500">NIP tidak dapat diubah</p>
                 </div>
                 
                 <div>
@@ -110,7 +247,6 @@ export default function GuruProfile() {
                     value={profileData.email}
                     onChange={handleProfileChange}
                     className="form-input"
-                    required
                   />
                 </div>
                 
@@ -146,9 +282,10 @@ export default function GuruProfile() {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  disabled={loading}
+                  className={`btn btn-primary ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Simpan Perubahan
+                  {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </button>
               </div>
             </form>
@@ -210,9 +347,10 @@ export default function GuruProfile() {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  disabled={loading}
+                  className={`btn btn-primary ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Ubah Password
+                  {loading ? 'Memperbarui...' : 'Ubah Password'}
                 </button>
               </div>
             </form>
@@ -222,3 +360,10 @@ export default function GuruProfile() {
     </GuruLayout>
   );
 }
+
+// Terapkan middleware autentikasi
+export const getServerSideProps = withGuruAuth(async ({ req, res }) => {
+  return {
+    props: {}
+  };
+});

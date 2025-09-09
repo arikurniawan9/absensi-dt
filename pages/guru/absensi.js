@@ -1,44 +1,182 @@
 // pages/guru/absensi.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GuruLayout from '../../components/layout/GuruLayout';
+import { withGuruAuth } from '../../middleware/guruRoute';
 
 export default function AbsensiSiswa() {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [jadwal, setJadwal] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [absensi, setAbsensi] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
   // Data dummy untuk kelas
   const classes = [
-    { id: 1, name: 'X-A' },
-    { id: 2, name: 'X-B' },
-    { id: 3, name: 'XI-A' },
-    { id: 4, name: 'XI-B' },
-    { id: 5, name: 'XII-A' },
-    { id: 6, name: 'XII-B' },
+    { id: 1, name: 'X-A', tingkat: 'X' },
+    { id: 2, name: 'X-B', tingkat: 'X' },
+    { id: 3, name: 'XI-A', tingkat: 'XI' },
+    { id: 4, name: 'XI-B', tingkat: 'XI' },
+    { id: 5, name: 'XII-A', tingkat: 'XII' },
+    { id: 6, name: 'XII-B', tingkat: 'XII' },
   ];
   
-  // Data dummy untuk siswa
-  const students = [
-    { id: 1, nis: '12345', name: 'Budi Santoso', status: '', keterangan: '' },
-    { id: 2, nis: '12346', name: 'Ani Putri', status: '', keterangan: '' },
-    { id: 3, nis: '12347', name: 'Joko Widodo', status: '', keterangan: '' },
-    { id: 4, nis: '12348', name: 'Siti Nurhaliza', status: '', keterangan: '' },
-    { id: 5, nis: '12349', name: 'Andi Prasetyo', status: '', keterangan: '' },
-  ];
-  
-  const handleStatusChange = (studentId, status) => {
-    // Di aplikasi sebenarnya, ini akan mengupdate state siswa
-    console.log(`Student ${studentId} status changed to ${status}`);
+  // Fungsi untuk mengambil jadwal berdasarkan kelas dan tanggal
+  const fetchJadwal = async (kelasId, tanggal) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`/api/guru/schedule?kelasId=${kelasId}&tanggal=${tanggal}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setJadwal(data.jadwal);
+      } else {
+        setError(data.message || 'Gagal memuat jadwal');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleKeteranganChange = (studentId, keterangan) => {
-    // Di aplikasi sebenarnya, ini akan mengupdate state siswa
-    console.log(`Student ${studentId} keterangan: ${keterangan}`);
+  // Fungsi untuk mengambil daftar siswa berdasarkan kelas
+  const fetchStudents = async (kelasId) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`/api/guru/students?kelasId=${kelasId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setStudents(data.students);
+        // Inisialisasi absensi dengan status kosong
+        const initialAbsensi = data.students.map(student => ({
+          siswaId: student.id,
+          status: '',
+          keterangan: ''
+        }));
+        setAbsensi(initialAbsensi);
+      } else {
+        setError(data.message || 'Gagal memuat daftar siswa');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleSubmit = (e) => {
+  // Fungsi untuk mengambil absensi yang sudah ada
+  const fetchExistingAbsensi = async (jadwalId, tanggal) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`/api/guru/absence?jadwalId=${jadwalId}&tanggal=${tanggal}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Update state absensi dengan data yang sudah ada
+        const existingAbsensi = data.absensi.reduce((acc, item) => {
+          acc[item.siswaId] = {
+            status: item.status,
+            keterangan: item.keterangan || ''
+          };
+          return acc;
+        }, {});
+        
+        setAbsensi(prev => prev.map(absen => ({
+          ...absen,
+          ...existingAbsensi[absen.siswaId]
+        })));
+      }
+    } catch (err) {
+      console.error('Gagal memuat absensi yang sudah ada:', err);
+    }
+  };
+  
+  const handleStatusChange = (siswaId, status) => {
+    setAbsensi(prev => prev.map(absen => 
+      absen.siswaId === siswaId ? { ...absen, status } : absen
+    ));
+  };
+  
+  const handleKeteranganChange = (siswaId, keterangan) => {
+    setAbsensi(prev => prev.map(absen => 
+      absen.siswaId === siswaId ? { ...absen, keterangan } : absen
+    ));
+  };
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Di aplikasi sebenarnya, ini akan mengirim data ke server
-    alert('Absensi berhasil disimpan!');
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Cari jadwalId berdasarkan kelas dan tanggal
+      const jadwalItem = jadwal.find(j => j.kelasId == selectedClass);
+      if (!jadwalItem) {
+        setError('Jadwal tidak ditemukan untuk kelas dan tanggal yang dipilih');
+        return;
+      }
+      
+      const response = await fetch('/api/guru/absence', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          jadwalId: jadwalItem.id,
+          tanggal: selectedDate,
+          kelasId: selectedClass,
+          absensi: absensi
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert('Absensi berhasil disimpan!');
+      } else {
+        setError(data.message || 'Gagal menyimpan absensi');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fungsi untuk menampilkan siswa ketika kelas dan tanggal dipilih
+  const handleShowStudents = () => {
+    if (selectedClass && selectedDate) {
+      fetchJadwal(selectedClass, selectedDate);
+      fetchStudents(selectedClass);
+    }
   };
 
   return (
@@ -48,6 +186,12 @@ export default function AbsensiSiswa() {
           <h3 className="text-lg font-medium text-gray-900">Form Absensi Siswa</h3>
         </div>
         <div className="p-6">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-6 mb-6 md:grid-cols-3">
               <div>
@@ -64,7 +208,7 @@ export default function AbsensiSiswa() {
                   <option value="">Pilih Kelas</option>
                   {classes.map((cls) => (
                     <option key={cls.id} value={cls.id}>
-                      {cls.name}
+                      {cls.tingkat} - {cls.name}
                     </option>
                   ))}
                 </select>
@@ -87,18 +231,19 @@ export default function AbsensiSiswa() {
               <div className="flex items-end">
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  disabled={!selectedClass}
+                  onClick={handleShowStudents}
+                  disabled={!selectedClass || !selectedDate || loading}
+                  className={`btn btn-primary ${(!selectedClass || !selectedDate || loading) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Tampilkan Siswa
+                  {loading ? 'Memuat...' : 'Tampilkan Siswa'}
                 </button>
               </div>
             </div>
             
-            {selectedClass && (
+            {selectedClass && selectedDate && students.length > 0 && (
               <div className="mt-8">
                 <h4 className="text-md font-medium text-gray-900 mb-4">
-                  Daftar Siswa - Kelas {classes.find(c => c.id == selectedClass)?.name}
+                  Daftar Siswa - Kelas {classes.find(c => c.id == selectedClass)?.tingkat} - {classes.find(c => c.id == selectedClass)?.name}
                 </h4>
                 
                 <div className="overflow-x-auto">
@@ -120,38 +265,41 @@ export default function AbsensiSiswa() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {students.map((student) => (
-                        <tr key={student.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {student.nis}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {student.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <select
-                              value={student.status}
-                              onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                              className="form-input"
-                            >
-                              <option value="">Pilih Status</option>
-                              <option value="hadir">Hadir</option>
-                              <option value="izin">Izin</option>
-                              <option value="sakit">Sakit</option>
-                              <option value="alpha">Alpha</option>
-                            </select>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <input
-                              type="text"
-                              value={student.keterangan}
-                              onChange={(e) => handleKeteranganChange(student.id, e.target.value)}
-                              placeholder="Keterangan (opsional)"
-                              className="form-input"
-                            />
-                          </td>
-                        </tr>
-                      ))}
+                      {students.map((student) => {
+                        const studentAbsensi = absensi.find(a => a.siswaId === student.id) || { status: '', keterangan: '' };
+                        return (
+                          <tr key={student.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {student.nis}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {student.nama}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <select
+                                value={studentAbsensi.status}
+                                onChange={(e) => handleStatusChange(student.id, e.target.value)}
+                                className="form-input"
+                              >
+                                <option value="">Pilih Status</option>
+                                <option value="hadir">Hadir</option>
+                                <option value="izin">Izin</option>
+                                <option value="sakit">Sakit</option>
+                                <option value="alpha">Alpha</option>
+                              </select>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <input
+                                type="text"
+                                value={studentAbsensi.keterangan}
+                                onChange={(e) => handleKeteranganChange(student.id, e.target.value)}
+                                placeholder="Keterangan (opsional)"
+                                className="form-input"
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -159,9 +307,10 @@ export default function AbsensiSiswa() {
                 <div className="mt-6">
                   <button
                     type="submit"
-                    className="btn btn-primary"
+                    disabled={loading}
+                    className={`btn btn-primary ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Simpan Absensi
+                    {loading ? 'Menyimpan...' : 'Simpan Absensi'}
                   </button>
                 </div>
               </div>
@@ -172,3 +321,10 @@ export default function AbsensiSiswa() {
     </GuruLayout>
   );
 }
+
+// Terapkan middleware autentikasi
+export const getServerSideProps = withGuruAuth(async ({ req, res }) => {
+  return {
+    props: {}
+  };
+});
