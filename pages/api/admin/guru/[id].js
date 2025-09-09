@@ -31,11 +31,11 @@ export default async function handler(req, res) {
 
   if (req.method === 'PUT') {
     try {
-      const { nip, nama, mataPelajaranId, alamat, noTelp } = req.body;
+      const { kodeGuru, nama, mataPelajaranId, alamat, noTelp, email } = req.body;
 
       // Validasi input
-      if (!nip || !nama || !mataPelajaranId) {
-        return res.status(400).json({ message: 'NIP, nama, dan mata pelajaran harus diisi' });
+      if (!kodeGuru || !nama || !mataPelajaranId) {
+        return res.status(400).json({ message: 'Kode guru, nama, dan mata pelajaran harus diisi' });
       }
 
       // Cek apakah guru ada
@@ -47,16 +47,16 @@ export default async function handler(req, res) {
         return res.status(404).json({ message: 'Guru tidak ditemukan' });
       }
 
-      // Cek apakah NIP sudah digunakan oleh guru lain
+      // Cek apakah kodeGuru sudah digunakan oleh guru lain
       const duplicateGuru = await prisma.guru.findUnique({
         where: { 
-          nip,
+          kodeGuru,
           NOT: { id: parseInt(id) }
         }
       });
 
       if (duplicateGuru) {
-        return res.status(400).json({ message: 'NIP sudah digunakan oleh guru lain' });
+        return res.status(400).json({ message: 'Kode guru sudah digunakan oleh guru lain' });
       }
 
       // Cek apakah mata pelajaran ada
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
       const updatedGuru = await prisma.guru.update({
         where: { id: parseInt(id) },
         data: {
-          nip,
+          kodeGuru,
           nama,
           mataPelajaranId: parseInt(mataPelajaranId),
           alamat: alamat || null,
@@ -90,17 +90,21 @@ export default async function handler(req, res) {
             select: {
               id: true,
               username: true,
+              email: true,
               status: true
             }
           }
         }
       });
 
-      // Update nama di user jika berubah
-      if (nama !== existingGuru.nama) {
+      // Update nama dan email di user jika berubah
+      if (nama !== existingGuru.nama || email !== existingGuru.user?.email) {
         await prisma.user.update({
           where: { id: updatedGuru.userId },
-          data: { nama }
+          data: { 
+            nama,
+            email: email || null
+          }
         });
       }
 

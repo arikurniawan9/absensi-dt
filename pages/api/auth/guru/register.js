@@ -15,20 +15,20 @@ if (process.env.NODE_ENV === 'production') {
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { nip, nama, username, password } = req.body;
+      const { kodeGuru, nama, username, password } = req.body;
 
       // Validasi input
-      if (!nip || !nama || !username || !password) {
-        return res.status(400).json({ message: 'NIP, nama, username, dan password harus diisi' });
+      if (!kodeGuru || !nama || !username || !password) {
+        return res.status(400).json({ message: 'Kode guru, nama, username, dan password harus diisi' });
       }
 
-      // Cek apakah NIP sudah digunakan
+      // Cek apakah kodeGuru sudah digunakan
       const existingGuru = await prisma.guru.findUnique({
-        where: { nip }
+        where: { kodeGuru }
       });
 
       if (existingGuru) {
-        return res.status(400).json({ message: 'NIP sudah digunakan' });
+        return res.status(400).json({ message: 'Kode guru sudah digunakan' });
       }
 
       // Cek apakah username sudah digunakan
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
         // Buat guru dengan userId yang baru dibuat
         const newGuru = await prisma.guru.create({
           data: {
-            nip,
+            kodeGuru,
             nama,
             mataPelajaranId: 1, // Default mata pelajaran, akan diupdate oleh admin
             userId: newUser.id

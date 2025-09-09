@@ -41,7 +41,7 @@ model Siswa {
 
 model Guru {
   id            Int    @id @default(autoincrement())
-  nip           String @unique
+  kodeGuru      String @unique
   nama          String
   mataPelajaranId Int
   alamat        String?

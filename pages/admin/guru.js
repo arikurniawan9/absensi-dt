@@ -307,7 +307,7 @@ export default function GuruManagement() {
               <input
                 type="text"
                 id="search"
-                placeholder="Cari NIP atau nama guru..."
+                placeholder="Cari kode guru atau nama..."
                 value={filters.search}
                 onChange={handleSearchChange}
                 className="form-input"
@@ -356,10 +356,13 @@ export default function GuruManagement() {
                         />
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        NIP
+                        Kode Guru
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nama
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Mata Pelajaran
@@ -388,10 +391,13 @@ export default function GuruManagement() {
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {g.nip}
+                            {g.kodeGuru}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {g.nama}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {g.user?.email || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {g.mataPelajaran?.kodeMapel} - {g.mataPelajaran?.namaMapel}
@@ -424,7 +430,7 @@ export default function GuruManagement() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                        <td colSpan="8" className="px-6 py-4 text-center text-sm text-gray-500">
                           Tidak ada data guru yang ditemukan
                         </td>
                       </tr>

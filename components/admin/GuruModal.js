@@ -3,11 +3,12 @@ import { useState, useEffect } from 'react';
 
 export default function GuruModal({ isOpen, onClose, guruData, mataPelajaranList, onSubmit }) {
   const [formData, setFormData] = useState({
-    nip: '',
+    kodeGuru: '',
     nama: '',
     mataPelajaranId: '',
     alamat: '',
     noTelp: '',
+    email: '',
     username: '',
     password: '',
     confirmPassword: ''
@@ -22,11 +23,12 @@ export default function GuruModal({ isOpen, onClose, guruData, mataPelajaranList
       if (guruData) {
         setIsEditMode(true);
         setFormData({
-          nip: guruData.nip || '',
+          kodeGuru: guruData.kodeGuru || '',
           nama: guruData.nama || '',
           mataPelajaranId: guruData.mataPelajaran?.id?.toString() || '',
           alamat: guruData.alamat || '',
           noTelp: guruData.noTelp || '',
+          email: guruData.user?.email || '',
           username: guruData.user?.username || '',
           password: '',
           confirmPassword: ''
@@ -34,11 +36,12 @@ export default function GuruModal({ isOpen, onClose, guruData, mataPelajaranList
       } else {
         setIsEditMode(false);
         setFormData({
-          nip: '',
+          kodeGuru: '',
           nama: '',
           mataPelajaranId: '',
           alamat: '',
           noTelp: '',
+          email: '',
           username: '',
           password: '',
           confirmPassword: ''
@@ -67,8 +70,8 @@ export default function GuruModal({ isOpen, onClose, guruData, mataPelajaranList
   const validate = () => {
     const newErrors = {};
     
-    if (!formData.nip.trim()) {
-      newErrors.nip = 'NIP harus diisi';
+    if (!formData.kodeGuru.trim()) {
+      newErrors.kodeGuru = 'Kode guru harus diisi';
     }
     
     if (!formData.nama.trim()) {
@@ -156,21 +159,21 @@ export default function GuruModal({ isOpen, onClose, guruData, mataPelajaranList
                 <div className="mt-4">
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <label htmlFor="nip" className="block text-sm font-medium text-gray-700 mb-1">
-                        NIP
+                      <label htmlFor="kodeGuru" className="block text-sm font-medium text-gray-700 mb-1">
+                        Kode Guru
                       </label>
                       <input
                         type="text"
-                        id="nip"
-                        name="nip"
-                        value={formData.nip}
+                        id="kodeGuru"
+                        name="kodeGuru"
+                        value={formData.kodeGuru}
                         onChange={handleChange}
-                        className={`form-input ${errors.nip ? 'border-red-500' : ''}`}
-                        placeholder="Masukkan NIP"
+                        className={`form-input ${errors.kodeGuru ? 'border-red-500' : ''}`}
+                        placeholder="Masukkan kode guru"
                         disabled={isEditMode}
                       />
-                      {errors.nip && (
-                        <p className="mt-1 text-sm text-red-600">{errors.nip}</p>
+                      {errors.kodeGuru && (
+                        <p className="mt-1 text-sm text-red-600">{errors.kodeGuru}</p>
                       )}
                     </div>
                     
@@ -189,6 +192,24 @@ export default function GuruModal({ isOpen, onClose, guruData, mataPelajaranList
                       />
                       {errors.nama && (
                         <p className="mt-1 text-sm text-red-600">{errors.nama}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className={`form-input ${errors.email ? 'border-red-500' : ''}`}
+                        placeholder="Masukkan email"
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                       )}
                     </div>
                     

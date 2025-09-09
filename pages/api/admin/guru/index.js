@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         // Untuk SQLite, kita tidak bisa menggunakan mode: 'insensitive'
         // Jadi kita gunakan pendekatan manual dengan beberapa kondisi
         where.OR = [
-          { nip: { contains: search } },
+          { kodeGuru: { contains: search } },
           { nama: { contains: search } }
         ];
       }
@@ -66,6 +66,7 @@ export default async function handler(req, res) {
               select: {
                 id: true,
                 username: true,
+                email: true,
                 status: true
               }
             }
@@ -89,20 +90,20 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'POST') {
     try {
-      const { nip, nama, mataPelajaranId, alamat, noTelp, username, password } = req.body;
+      const { kodeGuru, nama, mataPelajaranId, alamat, noTelp, email, username, password } = req.body;
 
       // Validasi input
-      if (!nip || !nama || !mataPelajaranId || !username || !password) {
-        return res.status(400).json({ message: 'NIP, nama, mata pelajaran, username, dan password harus diisi' });
+      if (!kodeGuru || !nama || !mataPelajaranId || !username || !password) {
+        return res.status(400).json({ message: 'Kode guru, nama, mata pelajaran, username, dan password harus diisi' });
       }
 
-      // Cek apakah NIP sudah digunakan
+      // Cek apakah kodeGuru sudah digunakan
       const existingGuru = await prisma.guru.findUnique({
-        where: { nip }
+        where: { kodeGuru }
       });
 
       if (existingGuru) {
-        return res.status(400).json({ message: 'NIP sudah digunakan' });
+        return res.status(400).json({ message: 'Kode guru sudah digunakan' });
       }
 
       // Cek apakah username sudah digunakan
@@ -136,7 +137,7 @@ export default async function handler(req, res) {
             password: hashedPassword,
             role: 'guru',
             nama,
-            email: null,
+            email: email || null,
             status: true
           }
         });
@@ -144,7 +145,7 @@ export default async function handler(req, res) {
         // Buat guru
         const newGuru = await prisma.guru.create({
           data: {
-            nip,
+            kodeGuru,
             nama,
             mataPelajaranId: parseInt(mataPelajaranId),
             alamat: alamat || null,
@@ -163,6 +164,7 @@ export default async function handler(req, res) {
               select: {
                 id: true,
                 username: true,
+                email: true,
                 status: true
               }
             }

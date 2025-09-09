@@ -25,7 +25,7 @@ async function main() {
     });
 
     // Membuat user guru
-    const guru = await prisma.user.upsert({
+    const guruUser = await prisma.user.upsert({
       where: { username: 'guru' },
       update: {},
       create: {
@@ -35,6 +35,18 @@ async function main() {
         nama: 'Guru Pertama',
         email: 'guru@absensisiswa.com',
         status: true,
+      },
+    });
+
+    // Membuat guru
+    const guru = await prisma.guru.upsert({
+      where: { kodeGuru: 'GURU001' },
+      update: {},
+      create: {
+        kodeGuru: 'GURU001',
+        nama: 'Guru Pertama',
+        mataPelajaranId: 1,
+        userId: guruUser.id,
       },
     });
 

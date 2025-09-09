@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 export default function GuruRegister() {
-  const [nip, setNip] = useState('');
+  const [kodeGuru, setKodeGuru] = useState('');
   const [nama, setNama] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -17,8 +17,8 @@ export default function GuruRegister() {
   const validate = () => {
     const newErrors = {};
     
-    if (!nip.trim()) {
-      newErrors.nip = 'NIP harus diisi';
+    if (!kodeGuru.trim()) {
+      newErrors.kodeGuru = 'Kode guru harus diisi';
     }
     
     if (!nama.trim()) {
@@ -59,7 +59,7 @@ export default function GuruRegister() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ nip, nama, username, password }),
+        body: JSON.stringify({ kodeGuru, nama, username, password }),
       });
 
       const data = await response.json();
@@ -98,24 +98,24 @@ export default function GuruRegister() {
           )}
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="nip" className="block text-sm font-medium text-gray-700 mb-1">
-                NIP
+              <label htmlFor="kodeGuru" className="block text-sm font-medium text-gray-700 mb-1">
+                Kode Guru
               </label>
               <input
-                id="nip"
-                name="nip"
+                id="kodeGuru"
+                name="kodeGuru"
                 type="text"
                 required
-                className={`appearance-none relative block w-full px-3 py-2 border ${errors.nip ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                placeholder="NIP"
-                value={nip}
+                className={`appearance-none relative block w-full px-3 py-2 border ${errors.kodeGuru ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                placeholder="Kode Guru"
+                value={kodeGuru}
                 onChange={(e) => {
-                  setNip(e.target.value);
-                  if (errors.nip) setErrors(prev => ({ ...prev, nip: '' }));
+                  setKodeGuru(e.target.value);
+                  if (errors.kodeGuru) setErrors(prev => ({ ...prev, kodeGuru: '' }));
                 }}
               />
-              {errors.nip && (
-                <p className="mt-1 text-sm text-red-600">{errors.nip}</p>
+              {errors.kodeGuru && (
+                <p className="mt-1 text-sm text-red-600">{errors.kodeGuru}</p>
               )}
             </div>
             
