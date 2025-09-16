@@ -1,30 +1,29 @@
 // pages/api/admin/users/[id].js
-import { PrismaClient } from '@prisma/client';
-import { authenticate } from '../../../middleware/auth';
-
-let prisma;
-
-if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient();
-} else {
-  if (!global.prisma) {
-    global.prisma = new PrismaClient();
-  }
-  prisma = global.prisma;
-}
+import prisma from '@/lib/prisma';
+import { authenticate, authorizeAdmin } from '@/middleware/auth';
 
 export default async function handler(req, res) {
-  // Middleware autentikasi
-  await new Promise((resolve, reject) => {
-    authenticate(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
+  // Middleware autentikasi dan otorisasi
+  try {
+    await new Promise((resolve, reject) => {
+      authenticate(req, res, (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        
+        authorizeAdmin(req, res, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
     });
-  });
-
-  // Hanya admin yang bisa mengakses
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
+  } catch (error) {
+    // Error sudah ditangani di dalam middleware
+    return;
   }
 
   const userId = parseInt(req.query.id);

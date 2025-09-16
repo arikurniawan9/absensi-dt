@@ -1,6 +1,6 @@
 // pages/api/admin/students/import.js
 import { PrismaClient } from '@prisma/client';
-import { authenticate } from '../../../../middleware/auth';
+import { authenticate, authorizeAdmin } from '@/middleware/auth';
 import * as XLSX from 'xlsx';
 
 let prisma;
@@ -14,6 +14,18 @@ if (process.env.NODE_ENV === 'production') {
   prisma = global.prisma;
 }
 
+// Helper to run middleware
+const runMiddleware = (req, res, fn) => {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+};
+
 export const config = {
   api: {
     bodyParser: false,
@@ -21,17 +33,13 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  // Middleware autentikasi
-  await new Promise((resolve, reject) => {
-    authenticate(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
-
-  // Hanya admin yang bisa mengakses
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
+  // Middleware autentikasi dan otorisasi
+  try {
+    await runMiddleware(req, res, authenticate);
+    await runMiddleware(req, res, authorizeAdmin);
+  } catch (error) {
+    // Error sudah ditangani di dalam middleware
+    return;
   }
 
   if (req.method === 'POST') {

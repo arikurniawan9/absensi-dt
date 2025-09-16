@@ -1,6 +1,6 @@
 // pages/api/admin/users.js
 import { PrismaClient } from '@prisma/client';
-import { authenticate } from '../../../middleware/auth';
+import { authenticate, authorizeAdmin } from '@/middleware/auth';
 
 let prisma;
 
@@ -13,18 +13,26 @@ if (process.env.NODE_ENV === 'production') {
   prisma = global.prisma;
 }
 
-export default async function handler(req, res) {
-  // Middleware autentikasi
-  await new Promise((resolve, reject) => {
-    authenticate(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
+// Helper to run middleware
+const runMiddleware = (req, res, fn) => {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
     });
   });
+};
 
-  // Hanya admin yang bisa mengakses
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
+export default async function handler(req, res) {
+  // Middleware autentikasi dan otorisasi
+  try {
+    await runMiddleware(req, res, authenticate);
+    await runMiddleware(req, res, authorizeAdmin);
+  } catch (error) {
+    // Error sudah ditangani di dalam middleware
+    return;
   }
 
   if (req.method === 'GET') {

@@ -27,9 +27,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Username dan password harus diisi' });
     }
 
-    // Cari user berdasarkan username
-    const user = await prisma.user.findUnique({
-      where: { username: username }
+    // Cari user berdasarkan username dan role admin
+    const user = await prisma.user.findFirst({
+      where: { 
+        username: username,
+        role: 'admin'
+      }
     });
 
     // Jika user tidak ditemukan
@@ -43,13 +46,25 @@ export default async function handler(req, res) {
       return res.status(401).json({ message: 'Username atau password salah' });
     }
 
+        // Jika user adalah guru, dapatkan guruId
+    let guruId = null;
+    if (user.role === 'guru') {
+      const guru = await prisma.guru.findUnique({
+        where: { userId: user.id }
+      });
+      if (guru) {
+        guruId = guru.id;
+      }
+    }
+
     // Buat token JWT
     const token = jwt.sign(
       { 
         id: user.id, 
         username: user.username, 
         role: user.role,
-        nama: user.nama
+        nama: user.nama,
+        guruId: guruId
       },
       process.env.JWT_SECRET || 'secretkey',
       { expiresIn: '1h' }

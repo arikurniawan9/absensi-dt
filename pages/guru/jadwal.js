@@ -28,13 +28,7 @@ export default function JadwalMengajar() {
   const fetchJadwal = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch('/api/guru/jadwal', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/guru/jadwal');
       
       const data = await response.json();
       
@@ -54,13 +48,7 @@ export default function JadwalMengajar() {
   // Fungsi untuk mengambil data kelas
   const fetchKelas = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch('/api/guru/classes', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/guru/classes');
       
       const data = await response.json();
       
@@ -75,13 +63,7 @@ export default function JadwalMengajar() {
   // Fungsi untuk mengambil data mata pelajaran
   const fetchMataPelajaran = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch('/api/guru/subjects', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/guru/subjects');
       
       const data = await response.json();
       
@@ -110,21 +92,17 @@ export default function JadwalMengajar() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     
+    const url = isEditing 
+      ? `/api/guru/jadwal/${formData.id}` 
+      : '/api/guru/jadwal';
+    const method = isEditing ? 'PUT' : 'POST';
+
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const url = isEditing 
-        ? `/api/guru/jadwal/${formData.id}`
-        : '/api/guru/jadwal';
-        
-      const method = isEditing ? 'PUT' : 'POST';
-      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
@@ -180,13 +158,8 @@ export default function JadwalMengajar() {
     
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
       const response = await fetch(`/api/guru/jadwal/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       
       const data = await response.json();
@@ -456,7 +429,7 @@ export default function JadwalMengajar() {
 }
 
 // Terapkan middleware autentikasi
-export const getServerSideProps = withGuruAuth(async ({ req, res }) => {
+export const getServerSideProps = withGuruAuth(async (ctx) => {
   return {
     props: {}
   };

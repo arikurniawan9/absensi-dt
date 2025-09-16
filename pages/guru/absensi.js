@@ -6,38 +6,46 @@ import { withGuruAuth } from '../../middleware/guruRoute';
 export default function AbsensiSiswa() {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [classes, setClasses] = useState([]);
   const [jadwal, setJadwal] = useState([]);
   const [students, setStudents] = useState([]);
   const [absensi, setAbsensi] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Data dummy untuk kelas
-  const classes = [
-    { id: 1, name: 'X-A', tingkat: 'X' },
-    { id: 2, name: 'X-B', tingkat: 'X' },
-    { id: 3, name: 'XI-A', tingkat: 'XI' },
-    { id: 4, name: 'XI-B', tingkat: 'XI' },
-    { id: 5, name: 'XII-A', tingkat: 'XII' },
-    { id: 6, name: 'XII-B', tingkat: 'XII' },
-  ];
-  
+  // Fungsi untuk mengambil daftar kelas
+  const fetchClasses = async () => {
+    try {
+      const response = await fetch('/api/guru/classes');
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setClasses(data.classes);
+      } else {
+        setError(data.message || 'Gagal memuat daftar kelas');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi saat memuat kelas');
+      console.error(err);
+    }
+  };
+
   // Fungsi untuk mengambil jadwal berdasarkan kelas dan tanggal
   const fetchJadwal = async (kelasId, tanggal) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`/api/guru/schedule?kelasId=${kelasId}&tanggal=${tanggal}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`/api/guru/schedule?kelasId=${kelasId}&tanggal=${tanggal}`);
       
       const data = await response.json();
       
       if (response.ok) {
         setJadwal(data.jadwal);
+        
+        // Jika ada jadwal, ambil absensi yang sudah ada
+        if (data.jadwal.length > 0) {
+          fetchExistingAbsensi(data.jadwal[0].id, tanggal);
+        }
       } else {
         setError(data.message || 'Gagal memuat jadwal');
       }
@@ -53,22 +61,16 @@ export default function AbsensiSiswa() {
   const fetchStudents = async (kelasId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`/api/guru/students?kelasId=${kelasId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`/api/guru/students?kelasId=${kelasId}`);
       
       const data = await response.json();
       
       if (response.ok) {
         setStudents(data.students);
-        // Inisialisasi absensi dengan status kosong
+        // Inisialisasi absensi dengan status default 'hadir'
         const initialAbsensi = data.students.map(student => ({
           siswaId: student.id,
-          status: '',
+          status: 'hadir',
           keterangan: ''
         }));
         setAbsensi(initialAbsensi);
@@ -86,13 +88,7 @@ export default function AbsensiSiswa() {
   // Fungsi untuk mengambil absensi yang sudah ada
   const fetchExistingAbsensi = async (jadwalId, tanggal) => {
     try {
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`/api/guru/absence?jadwalId=${jadwalId}&tanggal=${tanggal}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`/api/guru/absence?jadwalId=${jadwalId}&tanggal=${tanggal}`);
       
       const data = await response.json();
       
@@ -133,12 +129,34 @@ export default function AbsensiSiswa() {
     
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       // Cari jadwalId berdasarkan kelas dan tanggal
       const jadwalItem = jadwal.find(j => j.kelasId == selectedClass);
+
+      // Validasi waktu mengajar
+      if (jadwalItem) {
+        const now = new Date();
+        const [startHour, startMinute] = jadwalItem.jamMulai.split(':');
+        const [endHour, endMinute] = jadwalItem.jamSelesai.split(':');
+        
+        const startTime = new Date(selectedDate);
+        startTime.setHours(startHour, startMinute, 0, 0);
+
+        const endTime = new Date(selectedDate);
+        endTime.setHours(endHour, endMinute, 0, 0);
+
+        if (now < startTime || now > endTime) {
+          const formattedDate = new Date(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          setError(`Tidak ada jam mengajar untuk hari ini, tanggal ${formattedDate}. Anda hanya bisa absen antara ${jadwalItem.jamMulai} - ${jadwalItem.jamSelesai}.`);
+          setLoading(false);
+          return;
+        }
+      }
+      
       if (!jadwalItem) {
-        setError('Jadwal tidak ditemukan untuk kelas dan tanggal yang dipilih');
+        const formattedDate = new Date(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        setError(`Tidak ada jam mengajar untuk hari ini, tanggal ${formattedDate}.`);
+        setLoading(false);
         return;
       }
       
@@ -146,7 +164,6 @@ export default function AbsensiSiswa() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           jadwalId: jadwalItem.id,
@@ -179,6 +196,11 @@ export default function AbsensiSiswa() {
     }
   };
 
+  // Fetch classes when component mounts
+  useEffect(() => {
+    fetchClasses();
+  }, []);
+
   return (
     <GuruLayout title="Absensi Siswa">
       <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -208,7 +230,7 @@ export default function AbsensiSiswa() {
                   <option value="">Pilih Kelas</option>
                   {classes.map((cls) => (
                     <option key={cls.id} value={cls.id}>
-                      {cls.tingkat} - {cls.name}
+                      {cls.tingkat} - {cls.namaKelas}
                     </option>
                   ))}
                 </select>
@@ -243,7 +265,7 @@ export default function AbsensiSiswa() {
             {selectedClass && selectedDate && students.length > 0 && (
               <div className="mt-8">
                 <h4 className="text-md font-medium text-gray-900 mb-4">
-                  Daftar Siswa - Kelas {classes.find(c => c.id == selectedClass)?.tingkat} - {classes.find(c => c.id == selectedClass)?.name}
+                  Daftar Siswa - Kelas {classes.find(c => c.id == selectedClass)?.tingkat} - {classes.find(c => c.id == selectedClass)?.namaKelas}
                 </h4>
                 
                 <div className="overflow-x-auto">
@@ -276,17 +298,29 @@ export default function AbsensiSiswa() {
                               {student.nama}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <select
-                                value={studentAbsensi.status}
-                                onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                                className="form-input"
-                              >
-                                <option value="">Pilih Status</option>
-                                <option value="hadir">Hadir</option>
-                                <option value="izin">Izin</option>
-                                <option value="sakit">Sakit</option>
-                                <option value="alpha">Alpha</option>
-                              </select>
+                              <div className="flex space-x-1">
+                                {['hadir', 'sakit', 'izin', 'alpha'].map((status) => {
+                                  const statusColors = {
+                                    hadir: 'bg-green-500 hover:bg-green-600',
+                                    sakit: 'bg-blue-500 hover:bg-blue-600',
+                                    izin: 'bg-yellow-500 hover:bg-yellow-600',
+                                    alpha: 'bg-red-500 hover:bg-red-600',
+                                  };
+                                  const activeClass = studentAbsensi.status === status ? statusColors[status] : 'bg-gray-200 hover:bg-gray-300';
+                                  const textColor = studentAbsensi.status === status ? 'text-white' : 'text-gray-800';
+
+                                  return (
+                                    <button
+                                      key={status}
+                                      type="button"
+                                      onClick={() => handleStatusChange(student.id, status)}
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${activeClass} ${textColor}`}
+                                    >
+                                      {status.charAt(0).toUpperCase()}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                               <input
@@ -323,7 +357,7 @@ export default function AbsensiSiswa() {
 }
 
 // Terapkan middleware autentikasi
-export const getServerSideProps = withGuruAuth(async ({ req, res }) => {
+export const getServerSideProps = withGuruAuth(async (ctx) => {
   return {
     props: {}
   };

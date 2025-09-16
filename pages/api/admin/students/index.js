@@ -1,6 +1,6 @@
 // pages/api/admin/students/index.js
 import { PrismaClient } from '@prisma/client';
-import { authenticate } from '../../../../middleware/auth';
+import { authenticate, authorizeAdmin } from '@/middleware/auth';
 
 let prisma;
 
@@ -13,18 +13,26 @@ if (process.env.NODE_ENV === 'production') {
   prisma = global.prisma;
 }
 
-export default async function handler(req, res) {
-  // Middleware autentikasi
-  await new Promise((resolve, reject) => {
-    authenticate(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
+// Helper to run middleware
+const runMiddleware = (req, res, fn) => {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
     });
   });
+};
 
-  // Hanya admin yang bisa mengakses
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
+export default async function handler(req, res) {
+  // Middleware autentikasi dan otorisasi
+  try {
+    await runMiddleware(req, res, authenticate);
+    await runMiddleware(req, res, authorizeAdmin);
+  } catch (error) {
+    // Error sudah ditangani di dalam middleware
+    return;
   }
 
   if (req.method === 'GET') {
@@ -35,19 +43,17 @@ export default async function handler(req, res) {
       // Build filter conditions
       let where = {};
       
+      // Filter berdasarkan kelas
+      if (kelasId) {
+        where.kelasId = parseInt(kelasId);
+      }
+      
       // Filter berdasarkan pencarian
       if (search) {
-        // Untuk SQLite, kita tidak bisa menggunakan mode: 'insensitive'
-        // Jadi kita gunakan pendekatan manual dengan beberapa kondisi
         where.OR = [
           { nis: { contains: search } },
           { nama: { contains: search } }
         ];
-      }
-      
-      // Filter berdasarkan kelas
-      if (kelasId) {
-        where.kelasId = parseInt(kelasId);
       }
 
       // Dapatkan daftar siswa dengan pagination
@@ -56,10 +62,9 @@ export default async function handler(req, res) {
           where,
           skip: offset,
           take: parseInt(limit),
-          orderBy: [
-            { kelas: { namaKelas: 'asc' } },
-            { nama: 'asc' }
-          ],
+          orderBy: {
+            createdAt: 'desc'
+          },
           include: {
             kelas: {
               select: {
@@ -100,7 +105,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Jenis kelamin harus Laki-laki atau Perempuan' });
       }
 
-      // Cek apakah NIS sudah ada
+      // Cek apakah NIS sudah digunakan
       const existingStudent = await prisma.siswa.findUnique({
         where: { nis }
       });
@@ -119,7 +124,6 @@ export default async function handler(req, res) {
       }
 
       // Buat siswa baru
-      console.log('Request Body:', req.body);
       const newStudent = await prisma.siswa.create({
         data: {
           nis,
@@ -144,7 +148,7 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: `Terjadi kesalahan pada server: ${error.message}` });
+      res.status(500).json({ message: 'Terjadi kesalahan pada server' });
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });

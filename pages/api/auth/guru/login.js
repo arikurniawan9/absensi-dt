@@ -1,6 +1,7 @@
 // pages/api/auth/guru/login.js
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 let prisma;
 
@@ -48,7 +49,6 @@ export default async function handler(req, res) {
       }
 
       // Verifikasi password
-      const bcrypt = require('bcryptjs');
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
@@ -64,16 +64,18 @@ export default async function handler(req, res) {
           nama: user.nama,
           guruId: user.guru?.id
         },
-        process.env.JWT_SECRET || 'absensi_siswa_secret_key',
+        process.env.JWT_SECRET || 'secretkey',
         { expiresIn: '5d' }
       );
 
       // Hapus password dari response
       const { password: _, ...userWithoutPassword } = user;
 
+      // Set token di http-only cookie
+      res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 5}`); // 5 hari
+
       res.status(200).json({
         message: 'Login berhasil',
-        token,
         user: userWithoutPassword
       });
     } catch (error) {

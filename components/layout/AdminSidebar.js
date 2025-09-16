@@ -88,6 +88,17 @@ export default function AdminSidebar({ toggleSidebar }) {
           </Link>
           
           <Link 
+            href="/admin/jadwal"
+            className={`block px-4 py-2 text-sm font-medium rounded-md ${
+              isActive('/admin/jadwal') 
+                ? 'text-white bg-blue-600' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Jadwal Mengajar
+          </Link>
+          
+          <Link 
             href="/admin/activity-log"
             className={`block px-4 py-2 text-sm font-medium rounded-md ${
               isActive('/admin/activity-log') 

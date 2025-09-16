@@ -1,6 +1,6 @@
 // pages/api/guru/profile/password.js
 import { PrismaClient } from '@prisma/client';
-import { authenticateGuru } from '../../../middleware/guruAuth';
+import { authenticateGuruAPI } from '@/middleware/guruAuth';
 
 let prisma;
 

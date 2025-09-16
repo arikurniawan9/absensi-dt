@@ -1,6 +1,6 @@
 // pages/api/guru/absence/index.js
 import { PrismaClient } from '@prisma/client';
-import { authenticateGuru } from '../../../middleware/guruAuth';
+import { authenticateGuruAPI } from '@/middleware/guruAuth';
 
 let prisma;
 
@@ -14,13 +14,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 export default async function handler(req, res) {
-  // Middleware autentikasi guru
-  await new Promise((resolve, reject) => {
-    authenticateGuru(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  // Middleware autentikasi guru untuk API routes
+  try {
+    await authenticateGuruAPI(req, res, () => {});
+  } catch (error) {
+    // Error sudah ditangani di dalam authenticateGuruAPI
+    return;
+  }
 
   if (req.method === 'GET') {
     try {
@@ -48,6 +48,7 @@ export default async function handler(req, res) {
   } else if (req.method === 'POST') {
     try {
       const { jadwalId, tanggal, kelasId, absensi } = req.body;
+      console.log('[DEBUG] Incoming absence data:', req.body);
       
       if (!jadwalId || !tanggal || !kelasId || !absensi || !Array.isArray(absensi)) {
         return res.status(400).json({ message: 'Data absensi tidak lengkap' });
@@ -91,7 +92,7 @@ export default async function handler(req, res) {
         absensi: filteredAbsensi
       });
     } catch (error) {
-      console.error(error);
+      console.error('[DEBUG] Error saving absence:', error);
       res.status(500).json({ message: 'Terjadi kesalahan pada server' });
     }
   } else {

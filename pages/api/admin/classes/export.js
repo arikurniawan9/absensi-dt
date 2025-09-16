@@ -16,12 +16,22 @@ if (process.env.NODE_ENV === 'production') {
 
 export default async function handler(req, res) {
   // Middleware autentikasi
-  await new Promise((resolve, reject) => {
-    authenticate(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
+  try {
+    await new Promise((resolve, reject) => {
+      authenticate(req, res, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
     });
-  });
+  } catch (error) {
+    // Error sudah ditangani di dalam authenticate
+    return;
+  }
+
+  // Hanya admin yang bisa mengakses
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
+  }
 
   // Hanya admin yang bisa mengakses
   if (req.user.role !== 'admin') {

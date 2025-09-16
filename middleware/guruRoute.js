@@ -1,23 +1,24 @@
 // middleware/guruRoute.js
-import { authenticateGuru } from './guruAuth';
+import { authenticateGuruPage } from './guruAuth';
 
 export const withGuruAuth = (handler) => {
-  return async (req, res) => {
-    // Terapkan middleware autentikasi guru
-    return new Promise((resolve, reject) => {
-      authenticateGuru(req, res, async (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          try {
-            // Jika autentikasi berhasil, lanjutkan ke handler
-            const result = await handler(req, res);
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
-        }
-      });
-    });
+  return async (ctx) => {
+    // Terapkan middleware autentikasi guru untuk pages
+    try {
+      const user = await authenticateGuruPage(ctx);
+      
+      // Jika autentikasi berhasil, lanjutkan ke handler
+      return await handler(ctx);
+    } catch (error) {
+      console.error('Authentication error:', error);
+      
+      // Redirect ke halaman login jika autentikasi gagal
+      return {
+        redirect: {
+          destination: '/auth/guru/login',
+          permanent: false,
+        },
+      };
+    }
   };
 };

@@ -27,8 +27,6 @@ export default function GuruLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        // Simpan token di localStorage
-        localStorage.setItem('token', data.token);
         // Redirect ke halaman dashboard guru
         router.push('/guru/dashboard');
       } else {

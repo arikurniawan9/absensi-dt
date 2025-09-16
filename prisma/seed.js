@@ -24,6 +24,16 @@ async function main() {
       },
     });
 
+    // Membuat mata pelajaran contoh terlebih dahulu
+    const mataPelajaran = await prisma.mataPelajaran.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        kodeMapel: 'MTK',
+        namaMapel: 'Matematika',
+      },
+    });
+
     // Membuat user guru
     const guruUser = await prisma.user.upsert({
       where: { username: 'guru' },
@@ -45,14 +55,42 @@ async function main() {
       create: {
         kodeGuru: 'GURU001',
         nama: 'Guru Pertama',
-        mataPelajaranId: 1,
+        mataPelajaranId: mataPelajaran.id,
         userId: guruUser.id,
+      },
+    });
+
+    // Membuat kelas contoh
+    const kelas = await prisma.kelas.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        namaKelas: 'A',
+        tingkat: 'X',
+        tahunAjaran: '2025/2026',
+      },
+    });
+
+    // Membuat jadwal contoh
+    const jadwal = await prisma.jadwal.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        hari: 'Senin',
+        jamMulai: '08:00',
+        jamSelesai: '09:30',
+        kelasId: kelas.id,
+        guruId: guru.id,
+        mataPelajaranId: mataPelajaran.id,
       },
     });
 
     console.log('Data seed berhasil dibuat:');
     console.log('Admin:', admin);
     console.log('Guru:', guru);
+    console.log('Kelas:', kelas);
+    console.log('Mata Pelajaran:', mataPelajaran);
+    console.log('Jadwal:', jadwal);
   } catch (error) {
     console.error('Error during seeding:', error);
   }

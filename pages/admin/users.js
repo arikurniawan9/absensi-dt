@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import UserForm from '../../components/admin/UserForm';
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaKey } from 'react-icons/fa';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -119,6 +119,43 @@ export default function UserManagement() {
         alert(editingUser ? 'User berhasil diupdate' : 'User berhasil ditambahkan');
       } else {
         alert(data.message || 'Gagal menyimpan user');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan koneksi');
+      console.error(err);
+    }
+  };
+
+  // Fungsi untuk mereset password user
+  const handleResetPassword = async (userId) => {
+    const newPassword = prompt('Masukkan password baru untuk user ini (minimal 6 karakter):');
+
+    if (!newPassword) {
+      return; // User menekan cancel
+    }
+
+    if (newPassword.length < 6) {
+      alert('Password baru minimal 6 karakter.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/users/${userId}/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ newPassword })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message || 'Password berhasil diupdate');
+      } else {
+        alert(data.message || 'Gagal mengupdate password');
       }
     } catch (err) {
       alert('Terjadi kesalahan koneksi');
@@ -325,13 +362,20 @@ export default function UserManagement() {
                                 {user.status ? 'Aktif' : 'Nonaktif'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <button
                                 onClick={() => handleEditUser(user)}
                                 className="text-indigo-600 hover:text-indigo-900 mr-3 inline-flex items-center space-x-1"
                                 title="Edit"
                               >
                                 <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleResetPassword(user.id)}
+                                className="text-yellow-600 hover:text-yellow-900 mr-3 inline-flex items-center space-x-1"
+                                title="Reset Password"
+                              >
+                                <FaKey />
                               </button>
                               <button
                                 onClick={() => deleteUser(user.id)}

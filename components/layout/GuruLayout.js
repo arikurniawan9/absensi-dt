@@ -2,23 +2,51 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
+import { FaBars } from 'react-icons/fa';
 
 export default function GuruLayout({ title, children }) {
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [guruName, setGuruName] = useState('...'); // Default name while loading
+
+  useEffect(() => {
+    const fetchGuruProfile = async () => {
+      try {
+        const response = await fetch('/api/guru/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setGuruName(data.guru.nama);
+        } else {
+          // Handle error, maybe redirect to login if unauthorized
+          console.error('Failed to fetch guru profile');
+          setGuruName('Guru');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setGuruName('Guru');
+      }
+    };
+
+    fetchGuruProfile();
+  }, []);
 
   const handleLogout = () => {
-    // Hapus token dari localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-    }
-    // Redirect ke halaman login
+    // Hapus token atau sesi di sini jika ada
     router.push('/auth/guru/login');
   };
 
-  // Fungsi untuk menentukan apakah link aktif
   const isActive = (path) => {
-    return router.pathname === path;
+    return router.pathname.startsWith(path);
   };
+
+  const navLinks = [
+    { href: '/guru/dashboard', label: 'Dashboard' },
+    { href: '/guru/absensi', label: 'Absensi Siswa' },
+    { href: '/guru/riwayat-absensi', label: 'Riwayat Absensi' },
+    { href: '/guru/jadwal', label: 'Jadwal Mengajar' },
+    { href: '/guru/profile', label: 'Pengaturan Akun' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -28,83 +56,78 @@ export default function GuruLayout({ title, children }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-700">Guru</span>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
-            >
-              Logout
-            </button>
-          </div>
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Menu Guru</h3>
         </div>
-      </header>
+        <div className="p-4">
+          <nav className="space-y-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`block px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive(link.href)
+                    ? 'text-white bg-blue-600'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                onClick={() => setSidebarOpen(false)} // Close sidebar on link click
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </aside>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Menu Navigasi */}
-          <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Menu Guru</h3>
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black opacity-50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex flex-col flex-1 lg:ml-64">
+        {/* Header */}
+        <header className="bg-white shadow-sm sticky top-0 z-20">
+          <div className="mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-gray-700 p-2 rounded-md hover:bg-gray-100 lg:hidden"
+                  aria-label="Open sidebar"
+                >
+                  <FaBars size={20} />
+                </button>
+                <h1 className="text-xl font-bold text-gray-900 ml-2 lg:ml-0">{title}</h1>
               </div>
-              <div className="p-6">
-                <nav className="space-y-2">
-                  <Link 
-                    href="/guru/dashboard"
-                    className={`block px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive('/guru/dashboard') 
-                        ? 'text-white bg-blue-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link 
-                    href="/guru/absensi"
-                    className={`block px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive('/guru/absensi') 
-                        ? 'text-white bg-blue-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    Absensi Siswa
-                  </Link>
-                  <Link 
-                    href="/guru/jadwal"
-                    className={`block px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive('/guru/jadwal') 
-                        ? 'text-white bg-blue-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    Jadwal Mengajar
-                  </Link>
-                  <Link 
-                    href="/guru/profile"
-                    className={`block px-4 py-2 text-sm font-medium rounded-md ${
-                      isActive('/guru/profile') 
-                        ? 'text-white bg-blue-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    Pengaturan Akun
-                  </Link>
-                </nav>
+              
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-700 hidden sm:block">{guruName || 'Nama Guru'}</span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
+        </header>
 
-          {/* Konten Utama */}
-          <div className="lg:col-span-3">
-            {children}
-          </div>
-        </div>
-      </main>
+        {/* Page Content */}
+        <main className="flex-grow p-4 sm:p-6 lg:p-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

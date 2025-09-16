@@ -75,8 +75,8 @@ Pilih Status Kehadiran (Hadir/Izin/Sakit/Alpha) --> Simpan Absensi --> Tampilkan
 ### 4.3 Riwayat Absensi
 
 ```
-Guru --> Pilih Menu Riwayat Absensi --> Pilih Kelas & Periode --> Tampilkan List Absensi -->
-Pilihan: Lihat Detail/Edit --> Tampilkan Data Absensi --> Pilihan: Export/Cetak
+Guru --> Pilih Menu Riwayat Absensi --> Pilih Kelas --> Tampilkan List Absensi -->
+Pilihan: Lihat Detail --> Tampilkan Data Absensi
 ```
 
 ## 5. Database Schema
@@ -164,7 +164,11 @@ absensi-siswa/
 ├── pages/               # Halaman Next.js
 │   ├── api/             # API routes
 │   ├── admin/           # Halaman admin
+│   │   ├── laporan.js   # Halaman laporan absensi
 │   ├── guru/            # Halaman guru
+│   │   ├── absensi/
+│   │   │   └── detail.js # Halaman detail absensi
+│   │   └── riwayat-absensi.js # Halaman riwayat absensi
 │   ├── auth/
 │   ├── _app.js
 │   └── index.js

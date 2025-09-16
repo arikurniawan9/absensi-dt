@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import GuruLayout from '../../components/layout/GuruLayout';
 import { withGuruAuth } from '../../middleware/guruRoute';
 
-export default function GuruDashboard() {
+export default function GuruDashboard({ guruName }) {
   const [scheduleToday, setScheduleToday] = useState([]);
   const [recentAbsences, setRecentAbsences] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,14 +12,8 @@ export default function GuruDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        
         // Fetch jadwal hari ini
-        const scheduleResponse = await fetch('/api/guru/schedule/today', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const scheduleResponse = await fetch('/api/guru/schedule/today');
         
         const scheduleData = await scheduleResponse.json();
         
@@ -30,11 +24,7 @@ export default function GuruDashboard() {
         }
         
         // Fetch riwayat absensi terbaru
-        const absenceResponse = await fetch('/api/guru/absence/recent', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const absenceResponse = await fetch('/api/guru/absence/recent');
         
         const absenceData = await absenceResponse.json();
         
@@ -68,7 +58,7 @@ export default function GuruDashboard() {
         {/* Selamat Datang */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Selamat Datang, Guru!</h3>
+            <h3 className="text-lg font-medium text-gray-900">Selamat Datang, {guruName}!</h3>
           </div>
           <div className="p-6">
             <p className="text-gray-600">
@@ -222,8 +212,11 @@ export default function GuruDashboard() {
 }
 
 // Terapkan middleware autentikasi
-export const getServerSideProps = withGuruAuth(async ({ req, res }) => {
+export const getServerSideProps = withGuruAuth(async (ctx) => {
+  const guruName = ctx.req.user.nama || 'Guru'; // Default to 'Guru' if name is not available
   return {
-    props: {}
+    props: {
+      guruName,
+    }
   };
 });

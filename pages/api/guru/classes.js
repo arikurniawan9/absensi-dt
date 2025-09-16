@@ -1,35 +1,31 @@
 // pages/api/guru/classes.js
-import { PrismaClient } from '@prisma/client';
-import { authenticateGuru } from '../../middleware/guruAuth';
-
-let prisma;
-
-if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient();
-} else {
-  if (!global.prisma) {
-    global.prisma = new PrismaClient();
-  }
-  prisma = global.prisma;
-}
+import prisma from '@/lib/prisma';
+import { authenticateGuruAPI } from '@/middleware/guruAuth';
 
 export default async function handler(req, res) {
-  // Middleware autentikasi guru
-  await new Promise((resolve, reject) => {
-    authenticateGuru(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  // Middleware autentikasi guru untuk API routes
+  try {
+    await authenticateGuruAPI(req, res, () => {});
+  } catch (error) {
+    // Error sudah ditangani di dalam authenticateGuruAPI
+    return;
+  }
 
   if (req.method === 'GET') {
     try {
-      // Dapatkan semua kelas
+      // Dapatkan semua kelas yang memiliki jadwal dengan guruId ini
       const classes = await prisma.kelas.findMany({
-        orderBy: {
-          tingkat: 'asc',
-          namaKelas: 'asc'
-        }
+        where: {
+          jadwals: {
+            some: {
+              guruId: req.user.guruId
+            }
+          }
+        },
+        orderBy: [
+          { tingkat: 'asc' },
+          { namaKelas: 'asc' }
+        ]
       });
 
       res.status(200).json({

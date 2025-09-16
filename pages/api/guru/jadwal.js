@@ -1,6 +1,6 @@
 // pages/api/guru/jadwal.js
 import { PrismaClient } from '@prisma/client';
-import { authenticateGuru } from '../../middleware/guruAuth';
+import { authenticateGuruAPI } from '@/middleware/guruAuth';
 
 let prisma;
 
@@ -14,13 +14,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 export default async function handler(req, res) {
-  // Middleware autentikasi guru
-  await new Promise((resolve, reject) => {
-    authenticateGuru(req, res, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  // Middleware autentikasi guru untuk API routes
+  try {
+    await authenticateGuruAPI(req, res, () => {});
+  } catch (error) {
+    // Error sudah ditangani di dalam authenticateGuruAPI
+    return;
+  }
 
   if (req.method === 'GET') {
     try {
@@ -45,10 +45,10 @@ export default async function handler(req, res) {
             }
           }
         },
-        orderBy: {
-          hari: 'asc',
-          jamMulai: 'asc'
-        }
+        orderBy: [
+          { hari: 'asc' },
+          { jamMulai: 'asc' }
+        ]
       });
 
       res.status(200).json({

@@ -6,7 +6,7 @@ import { withGuruAuth } from '../../middleware/guruRoute';
 export default function GuruProfile() {
   const [profileData, setProfileData] = useState({
     nama: '',
-    nip: '',
+    kodeGuru: '',
     email: '',
     alamat: '',
     noTelp: ''
@@ -26,20 +26,14 @@ export default function GuruProfile() {
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch('/api/guru/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/guru/profile');
       
       const data = await response.json();
       
       if (response.ok) {
         setProfileData({
           nama: data.guru.nama,
-          nip: data.guru.nip,
+          kodeGuru: data.guru.kodeGuru,
           email: data.user.email || '',
           alamat: data.guru.alamat || '',
           noTelp: data.guru.noTelp || ''
@@ -86,13 +80,10 @@ export default function GuruProfile() {
     
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
       const response = await fetch('/api/guru/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(profileData)
       });
@@ -133,13 +124,10 @@ export default function GuruProfile() {
     
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
       const response = await fetch('/api/guru/profile/password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
@@ -220,20 +208,20 @@ export default function GuruProfile() {
                 </div>
                 
                 <div>
-                  <label htmlFor="nip" className="block text-sm font-medium text-gray-700 mb-1">
-                    NIP
+                  <label htmlFor="kodeGuru" className="block text-sm font-medium text-gray-700 mb-1">
+                    Kode Guru
                   </label>
                   <input
                     type="text"
-                    id="nip"
-                    name="nip"
-                    value={profileData.nip}
+                    id="kodeGuru"
+                    name="kodeGuru"
+                    value={profileData.kodeGuru}
                     onChange={handleProfileChange}
-                    className="form-input"
+                    className="form-input bg-gray-100 cursor-not-allowed"
                     required
                     readOnly
                   />
-                  <p className="mt-1 text-sm text-gray-500">NIP tidak dapat diubah</p>
+                  <p className="mt-1 text-sm text-gray-500">Kode Guru tidak dapat diubah</p>
                 </div>
                 
                 <div>
@@ -362,7 +350,7 @@ export default function GuruProfile() {
 }
 
 // Terapkan middleware autentikasi
-export const getServerSideProps = withGuruAuth(async ({ req, res }) => {
+export const getServerSideProps = withGuruAuth(async (ctx) => {
   return {
     props: {}
   };
