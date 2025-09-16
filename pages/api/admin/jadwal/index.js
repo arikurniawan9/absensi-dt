@@ -1,6 +1,7 @@
 // pages/api/admin/jadwal/index.js
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../../../../middleware/auth';
+import { logActivity } from '../../../../lib/activityLogger';
 
 let prisma;
 
@@ -204,6 +205,13 @@ export default async function handler(req, res) {
           }
         }
       });
+
+      // Log aktivitas
+      const adminNama = req.user.nama; // Asumsi nama admin tersedia di req.user
+      const guruNama = newJadwal.guru.nama;
+      const kelasNama = `${newJadwal.kelas.tingkat} - ${newJadwal.kelas.namaKelas}`;
+      const mapelNama = newJadwal.mataPelajaran.namaMapel;
+      await logActivity(req.user.id, 'Tambah Jadwal', `Admin ${adminNama} menambahkan jadwal ${mapelNama} untuk guru ${guruNama} di kelas ${kelasNama} pada hari ${hari}, pukul ${jamMulai}-${jamSelesai}.`, req);
 
       res.status(201).json({
         message: 'Jadwal berhasil dibuat',

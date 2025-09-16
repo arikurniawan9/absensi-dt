@@ -117,24 +117,24 @@ export default function LaporanAbsensi() {
 
   return (
     <AdminLayout title="Laporan Absensi">
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+      <div className="bg-white shadow rounded-lg overflow-hidden printable-area">
+        <div className="px-4 py-5 sm:px-6 border-b border-gray-200 print-hidden">
           <h3 className="text-lg font-medium text-gray-900">Laporan Absensi</h3>
         </div>
         <div className="p-6">
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 print-hidden">
               {error}
             </div>
           )}
           
           {success && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 print-hidden">
               {success}
             </div>
           )}
           
-          <form onSubmit={fetchReport} className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+          <form onSubmit={fetchReport} className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4 print-hidden">
             <div>
               <label htmlFor="class" className="block text-sm font-medium text-gray-700 mb-1">
                 Pilih Kelas
@@ -195,18 +195,41 @@ export default function LaporanAbsensi() {
           </form>
           
           {reportData.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 flex space-x-2 print-hidden">
               <button
                 onClick={exportToExcel}
                 className="btn btn-secondary"
               >
                 Ekspor ke Excel
               </button>
+              <button
+                onClick={() => window.print()}
+                className="btn btn-primary"
+              >
+                Ekspor ke PDF
+              </button>
             </div>
           )}
           
+          {/* Letterhead for printing */}
+          <div className="hidden print:block mb-8">
+            <img src="/kopsurat.png" alt="Kop Surat" className="w-full" />
+          </div>
+
+          {/* Report Title for printing */}
+          <div className="hidden print:block text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">LAPORAN ABSENSI SISWA</h1>
+            {selectedClass && classes.length > 0 && (
+              <h2 className="text-xl font-semibold text-gray-800">Kelas {classes.find(c => c.id === parseInt(selectedClass))?.tingkat} - {classes.find(c => c.id === parseInt(selectedClass))?.namaKelas}</h2>
+            )}
+            {startDate && endDate && (
+              <p className="text-gray-700">Periode: {new Date(startDate).toLocaleDateString('id-ID')} s/d {new Date(endDate).toLocaleDateString('id-ID')}</p>
+            )}
+            <p className="text-gray-700 text-sm mt-2">Dicetak pada: {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+
           {loading ? (
-            <div className="text-center py-8">
+            <div className="text-center py-8 print-hidden">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-2 text-gray-600">Memuat laporan absensi...</p>
             </div>
@@ -215,6 +238,9 @@ export default function LaporanAbsensi() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      No.
+                    </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       NIS
                     </th>
@@ -239,12 +265,15 @@ export default function LaporanAbsensi() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {reportData.map((row) => {
+                  {reportData.map((row, index) => {
                     const total = row.hadir + row.izin + row.sakit + row.alpha;
                     const percentage = total > 0 ? ((row.hadir / total) * 100).toFixed(2) : 0;
                     
                     return (
                       <tr key={row.siswa.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {index + 1}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {row.siswa.nis}
                         </td>
@@ -273,12 +302,100 @@ export default function LaporanAbsensi() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-8">
+            <div className="text-center py-8 print-hidden">
               <p className="text-gray-500">Silakan isi form di atas untuk melihat laporan absensi</p>
             </div>
           )}
         </div>
       </div>
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 1cm;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact; /* For background colors */
+            print-color-adjust: exact;
+            font-size: 6pt; /* Further reduce base font size */
+          }
+          /* Hide elements not needed in print */
+          header, aside, .print-hidden {
+            display: none !important;
+          }
+          /* Ensure main content takes full width */
+          main {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+          }
+          .printable-area {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          .printable-area > div:first-child {
+            border: none !important;
+          }
+          /* Table specific print styles */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none; /* Remove table border */
+          }
+          table thead {
+            display: table-header-group;
+          }
+          table tr {
+            page-break-inside: avoid;
+          }
+          table th, table td {
+            padding: 4px; /* Further reduce padding */
+            border: none; /* Remove cell borders */
+            vertical-align: top; /* Align content to top */
+            word-break: break-word; /* Allow long words to break */
+          }
+          table th:nth-child(1), table td:nth-child(1) { /* No. */
+            width: 5%;
+            text-align: center;
+            font-size: 5pt; /* Smaller font for No. */
+          }
+          table th:nth-child(2), table td:nth-child(2) { /* NIS */
+            width: 12%;
+            font-size: 5pt; /* Further reduce font size for NIS */
+          }
+          table th:nth-child(3), table td:nth-child(3) { /* Nama Siswa */
+            width: 28%;
+            font-size: 5pt; /* Further reduce font size for Nama Siswa */
+          }
+          table th:nth-child(4), table td:nth-child(4), /* Hadir */
+          table th:nth-child(5), table td:nth-child(5), /* Izin */
+          table th:nth-child(6), table td:nth-child(6), /* Sakit */
+          table th:nth-child(7), table td:nth-child(7)  /* Alpha */
+          {
+            width: 8%; /* Give fixed width to count columns */
+            text-align: center;
+          }
+          table th:last-child, table td:last-child {
+            width: 15%; /* Give more space to percentage column */
+            text-align: center;
+            white-space: normal; /* Allow text to wrap */
+            word-break: break-word; /* Break long words */
+          }
+          /* Adjust font sizes for report content */
+          h1 {
+            font-size: 14pt !important;
+          }
+          h2 {
+            font-size: 10pt !important;
+          }
+          p, span, div {
+            font-size: 6pt !important;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }

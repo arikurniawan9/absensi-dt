@@ -1,6 +1,7 @@
 // pages/api/guru/pengajuan-siswa/bulk.js
 import { PrismaClient } from '@prisma/client';
 import { authenticateGuruAPI } from '../../../../middleware/guruAuth';
+import { logActivity } from '../../../../lib/activityLogger';
 
 let prisma;
 
@@ -96,6 +97,10 @@ export default async function handler(req, res) {
       if (createdRequests.length === 0) {
         return res.status(400).json({ message: 'Tidak ada pengajuan yang berhasil dibuat. Pastikan siswa dan kelas tujuan valid.' });
       }
+
+      // Log aktivitas pengajuan siswa
+      const guruNama = req.user.nama; // Asumsi nama guru tersedia di req.user
+      await logActivity(req.user.id, 'Pengajuan Siswa', `Guru ${guruNama} mengajukan ${createdRequests.length} permintaan ${tipePengajuan} siswa.`, req);
 
       return res.status(201).json({ message: 'Pengajuan berhasil diajukan', count: createdRequests.length, pengajuan: createdRequests });
     } catch (error) {

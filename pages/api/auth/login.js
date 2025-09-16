@@ -2,6 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { logActivity } from '../../../lib/activityLogger';
 
 let prisma;
 
@@ -37,16 +38,18 @@ export default async function handler(req, res) {
 
     // Jika user tidak ditemukan
     if (!user) {
+      await logActivity(null, 'Login Gagal', `Percobaan login dengan username: ${username} (User tidak ditemukan)`, req);
       return res.status(401).json({ message: 'Username atau password salah' });
     }
 
     // Verifikasi password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      await logActivity(user.id, 'Login Gagal', `Percobaan login dengan username: ${username} (Password salah)`, req);
       return res.status(401).json({ message: 'Username atau password salah' });
     }
 
-        // Jika user adalah guru, dapatkan guruId
+    // Jika user adalah guru, dapatkan guruId
     let guruId = null;
     if (user.role === 'guru') {
       const guru = await prisma.guru.findUnique({
@@ -72,6 +75,9 @@ export default async function handler(req, res) {
 
     // Hapus password dari response
     const { password: userPassword, ...userWithoutPassword } = user;
+
+    // Log aktivitas login berhasil
+    await logActivity(user.id, 'Login Berhasil', `Admin ${user.username} berhasil login`, req);
 
     // Return response sukses dengan token
     res.status(200).json({

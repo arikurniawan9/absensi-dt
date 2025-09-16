@@ -1,6 +1,7 @@
 // pages/api/admin/reports/attendance.js
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../../../../middleware/auth';
+import { logActivity } from '../../../../lib/activityLogger';
 
 let prisma;
 
@@ -127,6 +128,12 @@ export default async function handler(req, res) {
           };
         })
       );
+
+      // Log aktivitas
+      const adminNama = req.user.nama; // Asumsi nama admin tersedia di req.user
+      const kelasInfo = await prisma.kelas.findUnique({ where: { id: parseInt(kelasId) } });
+      const kelasNama = kelasInfo ? `${kelasInfo.tingkat} - ${kelasInfo.namaKelas}` : `ID Kelas ${kelasId}`;
+      await logActivity(req.user.id, 'Generate Laporan Absensi', `Admin ${adminNama} membuat laporan absensi untuk kelas ${kelasNama} dari ${startDate} hingga ${endDate}.`, req);
 
       res.status(200).json({
         report

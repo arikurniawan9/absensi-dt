@@ -1,6 +1,7 @@
 // pages/api/admin/pengajuan-siswa/[id].js
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../../../../middleware/auth';
+import { logActivity } from '../../../../lib/activityLogger';
 
 let prisma;
 
@@ -90,6 +91,13 @@ export default async function handler(req, res) {
 
         return { message: `Pengajuan berhasil ${status}` }; // Return value from transaction
       });
+      
+      // Log aktivitas
+      const adminNama = req.user.nama; // Asumsi nama admin tersedia di req.user
+      const siswaNama = pengajuan.siswa.nama;
+      const tipe = pengajuan.tipePengajuan === 'pindah' ? 'Pindah Kelas' : 'Hapus Kelas';
+      await logActivity(req.user.id, 'Proses Pengajuan Siswa', `Admin ${adminNama} ${status} pengajuan ${tipe} untuk siswa ${siswaNama}.`, req);
+
       // Send response after transaction completes
       return res.status(200).json({ message: `Pengajuan berhasil ${status}` });
     } catch (error) {

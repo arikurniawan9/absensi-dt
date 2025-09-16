@@ -2,6 +2,7 @@
 // pages/api/guru/jadwal/index.js
 import { PrismaClient } from '@prisma/client';
 import { authenticateGuruAPI } from '../../../../middleware/guruAuth';
+import { logActivity } from '../../../../lib/activityLogger';
 
 let prisma;
 
@@ -85,7 +86,19 @@ export default async function handler(req, res) {
           kelasId: parseInt(kelasId),
           mataPelajaranId: parseInt(mataPelajaranId),
         },
+        include: {
+          kelas: true,
+          mataPelajaran: true,
+        }
       });
+
+      // Log aktivitas
+      const guruNama = req.user.nama; // Asumsi nama guru tersedia di req.user
+      const kelasInfo = await prisma.kelas.findUnique({ where: { id: parseInt(kelasId) } });
+      const kelasNama = kelasInfo ? `${kelasInfo.tingkat} - ${kelasInfo.namaKelas}` : `ID Kelas ${kelasId}`;
+      const mapelInfo = await prisma.mataPelajaran.findUnique({ where: { id: parseInt(mataPelajaranId) } });
+      const mapelNama = mapelInfo ? mapelInfo.namaMapel : `ID Mapel ${mataPelajaranId}`;
+      await logActivity(req.user.id, 'Tambah Jadwal Guru', `Guru ${guruNama} menambahkan jadwal ${mapelNama} di kelas ${kelasNama} pada hari ${hari}, pukul ${jamMulai}-${jamSelesai}.`, req);
 
       return res.status(201).json({ message: 'Jadwal berhasil dibuat', jadwal: newJadwal });
     } catch (error) {

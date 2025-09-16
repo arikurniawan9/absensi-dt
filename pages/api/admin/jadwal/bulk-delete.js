@@ -1,6 +1,7 @@
 // pages/api/admin/jadwal/bulk-delete.js
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../../../../middleware/auth';
+import { logActivity } from '../../../../lib/activityLogger';
 
 let prisma;
 
@@ -55,6 +56,10 @@ export default async function handler(req, res) {
           }
         }
       });
+
+      // Log aktivitas
+      const adminNama = req.user.nama; // Asumsi nama admin tersedia di req.user
+      await logActivity(req.user.id, 'Hapus Jadwal Massal', `Admin ${adminNama} menghapus ${deletedJadwal.count} jadwal.`, req);
 
       res.status(200).json({
         message: 'Jadwal berhasil dihapus secara massal',

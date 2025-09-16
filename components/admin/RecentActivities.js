@@ -14,21 +14,21 @@ export default function RecentActivities({ activities }) {
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
                       <span className="text-white text-sm font-medium">
-                        {activity.user.charAt(0)}
+                        {activity.user?.nama?.charAt(0) || 'N/A'}
                       </span>
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.user}
+                      {activity.user?.nama || 'Pengguna Tidak Dikenal'}
                     </p>
                     <p className="text-sm text-gray-500 truncate">
-                      {activity.action}
+                      {activity.activity}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">
-                      {activity.time}
+                      {activity.createdAt ? new Date(activity.createdAt).toLocaleString() : 'N/A'}
                     </p>
                   </div>
                 </div>

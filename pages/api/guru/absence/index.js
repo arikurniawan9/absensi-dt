@@ -1,6 +1,7 @@
 // pages/api/guru/absence/index.js
 import { PrismaClient } from '@prisma/client';
 import { authenticateGuruAPI } from '@/middleware/guruAuth';
+import { logActivity } from '../../../../lib/activityLogger';
 
 let prisma;
 
@@ -86,6 +87,13 @@ export default async function handler(req, res) {
 
       // Filter out null values
       const filteredAbsensi = newAbsensi.filter(item => item !== null);
+
+      // Log aktivitas absensi
+      const guruId = req.user.guruId; // Asumsi guruId tersedia di req.user
+      const guruNama = req.user.nama; // Asumsi nama guru tersedia di req.user
+      const kelasInfo = await prisma.kelas.findUnique({ where: { id: parseInt(kelasId) } });
+      const kelasNama = kelasInfo ? `${kelasInfo.tingkat} - ${kelasInfo.namaKelas}` : `ID Kelas ${kelasId}`;
+      await logActivity(req.user.id, 'Absensi Siswa', `Guru ${guruNama} menyimpan absensi untuk kelas ${kelasNama} pada tanggal ${tanggal}.`, req);
 
       res.status(201).json({
         message: 'Absensi berhasil disimpan',
