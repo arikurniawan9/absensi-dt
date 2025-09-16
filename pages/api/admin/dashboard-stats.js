@@ -43,6 +43,9 @@ export default async function handler(req, res) {
       const totalClasses = await prisma.kelas.count();
       const totalSubjects = await prisma.mataPelajaran.count();
       const totalUsers = await prisma.user.count();
+      const totalPendingRequests = await prisma.pengajuanSiswa.count({
+        where: { status: 'pending' }
+      });
 
       res.status(200).json({
         totalStudents,
@@ -50,6 +53,7 @@ export default async function handler(req, res) {
         totalClasses,
         totalSubjects,
         totalUsers,
+        totalPendingRequests,
       });
     } catch (error) {
       console.error(error);

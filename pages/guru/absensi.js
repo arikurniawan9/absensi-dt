@@ -10,8 +10,16 @@ export default function AbsensiSiswa() {
   const [jadwal, setJadwal] = useState([]);
   const [students, setStudents] = useState([]);
   const [absensi, setAbsensi] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]); // New state for selected students
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false); // New state for modal visibility
+  const [requestType, setRequestType] = useState(''); // 'pindah' or 'hapus'
+  const [requestFormData, setRequestFormData] = useState({
+    kelasTujuanId: '',
+    alasan: '',
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   // Fungsi untuk mengambil daftar kelas
   const fetchClasses = async () => {
@@ -122,6 +130,71 @@ export default function AbsensiSiswa() {
     setAbsensi(prev => prev.map(absen => 
       absen.siswaId === siswaId ? { ...absen, keterangan } : absen
     ));
+  };
+
+  const handleSelectAllStudents = () => {
+    if (selectedStudents.length === students.length) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(students.map(student => student.id));
+    }
+  };
+
+  const handleSelectStudent = (siswaId) => {
+    if (selectedStudents.includes(siswaId)) {
+      setSelectedStudents(selectedStudents.filter(id => id !== siswaId));
+    } else {
+      setSelectedStudents([...selectedStudents, siswaId]);
+    }
+  };
+
+  const handleRequestFormChange = (e) => {
+    const { name, value } = e.target;
+    setRequestFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('/api/guru/pengajuan-siswa/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          siswaIds: selectedStudents,
+          tipePengajuan: requestType,
+          kelasTujuanId: requestType === 'pindah' ? parseInt(requestFormData.kelasTujuanId) : null,
+          alasan: requestFormData.alasan,
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('Pengajuan berhasil diajukan!');
+        setIsRequestModalOpen(false);
+        setSelectedStudents([]); // Clear selection
+        setRequestFormData({
+          kelasTujuanId: '',
+          alasan: '',
+        });
+      } else {
+        setError(data.message || 'Gagal mengajukan permintaan');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
   
   const handleSubmit = async (e) => {
@@ -273,6 +346,14 @@ export default function AbsensiSiswa() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <input
+                            type="checkbox"
+                            onChange={handleSelectAllStudents}
+                            checked={students.length > 0 && selectedStudents.length === students.length}
+                            className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
+                          />
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           NIS
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -291,10 +372,17 @@ export default function AbsensiSiswa() {
                         const studentAbsensi = absensi.find(a => a.siswaId === student.id) || { status: '', keterangan: '' };
                         return (
                           <tr key={student.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {student.nis}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                      <input
+                                                        type="checkbox"
+                                                        checked={selectedStudents.includes(student.id)}
+                                                        onChange={() => handleSelectStudent(student.id)}
+                                                        className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
+                                                      />
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                      {student.nis}
+                                                    </td>                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {student.nama}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -338,6 +426,31 @@ export default function AbsensiSiswa() {
                   </table>
                 </div>
                 
+                <div className="mt-6 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequestType('pindah');
+                      setIsRequestModalOpen(true);
+                    }}
+                    disabled={selectedStudents.length === 0}
+                    className={`btn btn-primary ${selectedStudents.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    Ajukan Pindah Kelas ({selectedStudents.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequestType('hapus');
+                      setIsRequestModalOpen(true);
+                    }}
+                    disabled={selectedStudents.length === 0}
+                    className={`btn btn-danger ${selectedStudents.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    Ajukan Hapus Kelas ({selectedStudents.length})
+                  </button>
+                </div>
+
                 <div className="mt-6">
                   <button
                     type="submit"
@@ -352,6 +465,83 @@ export default function AbsensiSiswa() {
           </form>
         </div>
       </div>
+
+      {/* Request Modal */}
+      {isRequestModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setIsRequestModalOpen(false)}></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  Ajukan {requestType === 'pindah' ? 'Pindah Kelas' : 'Hapus Kelas'}
+                </h3>
+                {error && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {error}
+                  </div>
+                )}
+                {success && (
+                  <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    {success}
+                  </div>
+                )}
+                <form onSubmit={handleRequestSubmit} className="space-y-4">
+                  {requestType === 'pindah' && (
+                    <div>
+                      <label htmlFor="kelasTujuanId" className="block text-sm font-medium text-gray-700 mb-1">Kelas Tujuan</label>
+                      <select
+                        id="kelasTujuanId"
+                        name="kelasTujuanId"
+                        value={requestFormData.kelasTujuanId}
+                        onChange={handleRequestFormChange}
+                        className="form-input"
+                        required
+                      >
+                        <option value="">-- Pilih Kelas Tujuan --</option>
+                        {classes.map(cls => (
+                          <option key={cls.id} value={cls.id}>
+                            {cls.tingkat} - {cls.namaKelas}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <div>
+                    <label htmlFor="alasan" className="block text-sm font-medium text-gray-700 mb-1">Alasan</label>
+                    <textarea
+                      id="alasan"
+                      name="alasan"
+                      value={requestFormData.alasan}
+                      onChange={handleRequestFormChange}
+                      rows="3"
+                      className="form-input"
+                      required
+                    ></textarea>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsRequestModalOpen(false)}
+                      className="btn btn-secondary"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className={`btn btn-primary ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {loading ? 'Mengajukan...' : 'Ajukan'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </GuruLayout>
   );
 }

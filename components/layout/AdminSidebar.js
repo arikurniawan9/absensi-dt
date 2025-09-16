@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FaTimes } from 'react-icons/fa';
 
-export default function AdminSidebar({ toggleSidebar }) {
+export default function AdminSidebar({ toggleSidebar, pendingRequestsCount }) {
   const router = useRouter();
   
   // Fungsi untuk menentukan apakah link aktif
@@ -96,6 +96,22 @@ export default function AdminSidebar({ toggleSidebar }) {
             }`}
           >
             Jadwal Mengajar
+          </Link>
+          
+          <Link 
+            href="/admin/pengajuan-siswa"
+            className={`flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md ${
+              isActive('/admin/pengajuan-siswa') 
+                ? 'text-white bg-blue-600' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <span>Manajemen Pengajuan Siswa</span>
+            {pendingRequestsCount > 0 && (
+              <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                {pendingRequestsCount}
+              </span>
+            )}
           </Link>
           
           <Link 
