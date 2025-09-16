@@ -32,11 +32,6 @@ export default async function handler(req, res) {
     return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
   }
 
-  // Hanya admin yang bisa mengakses
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
-  }
-
   if (req.method === 'GET') {
     try {
       // Dapatkan semua guru aktif

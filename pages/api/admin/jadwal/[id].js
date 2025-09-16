@@ -32,11 +32,6 @@ export default async function handler(req, res) {
     return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
   }
 
-  // Hanya admin yang bisa mengakses
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Akses ditolak. Hanya admin yang dapat mengakses.' });
-  }
-
   const { id } = req.query;
 
   if (req.method === 'PUT') {
@@ -77,28 +72,25 @@ export default async function handler(req, res) {
       // Cek apakah sudah ada jadwal yang bentrok (selain jadwal yang sedang diupdate)
       const conflictingJadwal = await prisma.jadwal.findFirst({
         where: {
-          guruId: parseInt(guruId),
           hari,
-          id: {
-            not: parseInt(id)
-          },
+          id: { not: parseInt(id) }, // Exclude the current schedule from the check
+          jamMulai: { lt: jamSelesai },
+          jamSelesai: { gt: jamMulai },
           OR: [
-            {
-              jamMulai: {
-                lte: jamSelesai
-              },
-              jamSelesai: {
-                gte: jamMulai
-              }
-            }
-          ]
-        }
+            { guruId: parseInt(guruId) },
+            { kelasId: parseInt(kelasId) },
+          ],
+        },
       });
 
       if (conflictingJadwal) {
-        return res.status(400).json({ 
-          message: 'Jadwal bentrok dengan jadwal yang sudah ada' 
-        });
+        let conflictMessage = 'Jadwal bentrok dengan yang sudah ada.';
+        if (conflictingJadwal.guruId === parseInt(guruId)) {
+          conflictMessage = `Guru tersebut sudah memiliki jadwal lain pada jam yang sama di hari ${hari}.`;
+        } else if (conflictingJadwal.kelasId === parseInt(kelasId)) {
+          conflictMessage = `Kelas tersebut sudah memiliki jadwal lain pada jam yang sama di hari ${hari}.`;
+        }
+        return res.status(400).json({ message: conflictMessage });
       }
 
       // Update jadwal
@@ -113,27 +105,9 @@ export default async function handler(req, res) {
           mataPelajaranId: parseInt(mataPelajaranId)
         },
         include: {
-          guru: {
-            select: {
-              id: true,
-              kodeGuru: true,
-              nama: true
-            }
-          },
-          kelas: {
-            select: {
-              id: true,
-              namaKelas: true,
-              tingkat: true
-            }
-          },
-          mataPelajaran: {
-            select: {
-              id: true,
-              kodeMapel: true,
-              namaMapel: true
-            }
-          }
+          guru: true,
+          kelas: true,
+          mataPelajaran: true,
         }
       });
 
