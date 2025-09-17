@@ -220,3 +220,49 @@ absensi-siswa/
 
 - ESLint dan Prettier (code formatting)
 - Husky dan lint-staged (pre-commit hooks)
+
+---
+
+### Ringkasan Pekerjaan Hari Ini
+
+Hari ini kita telah menyelesaikan banyak hal penting, terutama berfokus pada penyempurnaan fitur yang sudah ada dan mengaktifkan pencatatan aktivitas:
+
+1.  **Penyempurnaan *Dashboard* Admin:**
+    *   Menambahkan statistik "Pengajuan Tertunda" ke *dashboard*.
+    *   Menampilkan daftar "Pengajuan Siswa Tertunda Terbaru" di *dashboard* admin.
+    *   Menambahkan *badge* notifikasi di *sidebar* admin untuk pengajuan tertunda.
+2.  **Aktivasi Log Aktivitas Pengguna:**
+    *   Mengintegrasikan pencatatan log untuk berbagai aktivitas penting di *backend*, termasuk:
+        *   *Login* Admin dan Guru (berhasil dan gagal).
+        *   Pengiriman Absensi Siswa oleh Guru.
+        *   Pengajuan Pindah/Hapus Kelas Siswa oleh Guru.
+        *   Pemrosesan Pengajuan Siswa oleh Admin (diterima/ditolak).
+        *   Penambahan, Pembaruan, dan Penghapusan Jadwal oleh Admin dan Guru.
+        *   Pembuatan Laporan Absensi oleh Admin.
+3.  **Fitur Pengajuan Siswa Pindah/Hapus Kelas:**
+    *   Memindahkan fungsionalitas pengajuan ke halaman absensi guru, memungkinkan pengajuan multi-siswa.
+    *   Mengimplementasikan *modal* pengajuan dan API *backend* untuk pengajuan massal.
+    *   Menyelesaikan logika pemrosesan pengajuan di sisi admin, termasuk pembaruan kelas siswa untuk "pindah kelas" dan penghapusan data siswa untuk "hapus kelas".
+4.  **Penyempurnaan Laporan Absensi Admin:**
+    *   Menambahkan opsi "Ekspor ke PDF" di halaman laporan.
+    *   Mengintegrasikan `kopsurat.png` ke dalam hasil cetak PDF.
+    *   Melakukan beberapa iterasi perbaikan CSS cetak untuk tata letak yang lebih rapi, ukuran *font* yang optimal, penghapusan *border*, dan memastikan semua kolom (termasuk "% Kehadiran" dan nomor urut) terlihat dengan baik.
+    *   Menambahkan nomor urut pada tabel laporan.
+5.  **Perbaikan *Bug* dan Refinement:**
+    *   Memperbaiki berbagai *runtime error* dan *syntax error* yang muncul selama pengembangan.
+    *   Memperbaiki *path import* yang salah.
+    *   Menyempurnakan responsivitas *layout* guru dan tampilan nama guru di *header*.
+    *   Menyelesaikan konflik *merge* Git.
+
+---
+
+### Pembaruan *Workflow* (Belum Selesai)
+
+Berdasarkan *workflow* yang ada dan fitur yang kita diskusikan, berikut adalah beberapa area yang masih bisa dikembangkan di masa mendatang:
+
+*   **Notifikasi *Real-time* (WebSockets):** Notifikasi pengajuan baru saat ini menggunakan *polling* (mendekati *real-time*). Untuk pembaruan instan, implementasi WebSockets diperlukan, yang merupakan perubahan signifikan pada arsitektur *backend* dan *frontend*.
+*   **Pengelolaan Data Master Lainnya:** Meskipun kerangka kerja sudah ada, kita tidak secara spesifik menyentuh semua halaman manajemen data master (misalnya, Siswa, Guru, Mata Pelajaran) untuk memastikan semua fungsionalitas CRUD, impor/ekspor, dan penghapusan massal berfungsi optimal setelah perubahan skema dan API.
+*   **Riwayat Absensi Guru:** Halaman riwayat absensi guru (`/guru/riwayat-absensi`) belum disentuh secara spesifik untuk penyempurnaan.
+*   **Pengelolaan Pengguna Admin:** Fungsionalitas manajemen pengguna oleh admin belum diperiksa secara mendalam.
+*   **Pengujian Komprehensif:** Semua fitur baru dan perubahan yang telah kita lakukan memerlukan pengujian menyeluruh untuk memastikan stabilitas dan keandalan.
+*   **Pembaruan Prisma:** Ada peringatan tentang versi Prisma yang sudah usang. Memperbarui Prisma ke versi terbaru dapat memberikan fitur dan perbaikan *bug* baru.
